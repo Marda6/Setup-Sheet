@@ -194,46 +194,9 @@
         </div>
 
         <div class="insp__body">
-          <!-- SETUP pane -->
+          <!-- SETUP pane — all setups stacked (the full setup sheet) -->
           <section class="insp-pane is-active" id="pane-setup">
-            <div class="op-banner">
-              <span class="op-banner__icon"><svg><use href="#op-operation"/></svg></span>
-              <div class="op-banner__text">
-                <div class="op-banner__name" id="opName">Face Milling 1</div>
-                <div class="op-banner__sub" id="opSub">Face Milling · 40mm End Mill · Part 1</div>
-              </div>
-              <span class="op-banner__pin" title="Highlighted in 3D"><svg><use href="#i-pin"/></svg></span>
-            </div>
-
-            <div class="section">
-              <div class="section__title">Cutting parameters</div>
-              <div class="cut-grid" id="cutGrid"></div>
-              <div class="form-foot">
-                <div class="form-foot__links">
-                  <a>Show all parameters</a>
-                  <a>Use existing preset</a>
-                </div>
-                <div class="form-foot__btns">
-                  <button class="btn-ghost" title="Reset"><svg><use href="#i-undo"/></svg></button>
-                  <button class="btn-green">Save changes</button>
-                </div>
-              </div>
-            </div>
-
-            <div class="section">
-              <div class="section__title">Workpiece setup</div>
-              <div class="kv"><span class="kv__label">Material</span><span class="kv__value"><input class="field" placeholder="Material" /></span></div>
-              <div class="kv"><span class="kv__label">Part zero</span><span class="kv__value">
-                <span class="coord"><b>X</b>34.8</span><span class="coord"><b>Y</b>436.7</span><span class="coord"><b>Z</b>949.4</span>
-              </span></div>
-              <div class="kv"><span class="kv__label">Stock</span><span class="kv__value"><span class="value-tag">42.0 × 168.0 × 52.0 mm</span></span></div>
-              <div class="kv"><span class="kv__label">Fixture</span><span class="kv__value"><button class="linklike">Workpiece</button></span></div>
-              <div class="preview">
-                <img src="assets/workpiece-preview.png" alt="Workpiece preview"
-                     onerror="this.style.display='none';this.nextElementSibling.style.display='grid';" />
-                <div class="stage__placeholder" style="display:none;font-size:12px">Workpiece preview<br><small style="opacity:.6">assets/workpiece-preview.png</small></div>
-              </div>
-            </div>
+            <div id="setupSheet"></div>
           </section>
 
           <!-- TOOLS pane -->

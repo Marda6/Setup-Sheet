@@ -30,6 +30,33 @@ const OPS = {
   s2hole:     op('s2hole',     'Hole machining 1',   'Hole machining',  '8mm Drill',     'S2 · Part 2', '0:26', { n: 4200, vf: 320,  fz: 0.04, ap: 8.0, ae: 8,  plunge: 160 }),
 };
 
+/* ----- setups (right inspector renders them stacked: the full setup sheet) - */
+const SETUPS = [
+  { id: 'setup1', name: 'Setup 1',
+    wp: { x: '34.8', y: '436.7', z: '949.4', stock: '42.0 × 168.0 × 52.0 mm', fixture: 'Workpiece' },
+    parts: [
+      { name: 'Part 1', ops: ['faceMill1', 'hole1', 'rough1', 'rough2', 'cont25'] },
+      { name: 'Part 2', ops: ['p2rough0', 'p2rough1', 'p2cont'] },
+      { name: 'Part 3', ops: ['p3hole', 'p3cont1', 'p3cont2'] },
+    ] },
+  { id: 'setup2', name: 'Setup 2',
+    wp: { x: '34.8', y: '436.7', z: '78.0', stock: '42.0 × 168.0 × 52.0 mm', fixture: 'Workpiece' },
+    parts: [
+      { name: 'Part 1', ops: ['s2face', 's2rough', 's2cont'] },
+      { name: 'Part 2', ops: ['s2chamf', 's2hole'] },
+    ] },
+];
+
+function parseTime(t) {
+  const p = t.split(':').map(Number);
+  return p.length === 3 ? p[0] * 3600 + p[1] * 60 + p[2] : p[0] * 60 + p[1];
+}
+function fmtTime(s) {
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), ss = s % 60;
+  const pad = (n) => String(n).padStart(2, '0');
+  return h > 0 ? `${h}:${pad(m)}:${pad(ss)}` : `${m}:${pad(ss)}`;
+}
+
 /* --------------------------------------------------------- operations tree */
 const TREE = [
   { label: 'HAAS DT-2', icon: 'op-machine', open: true, children: [
@@ -119,19 +146,106 @@ function renderTree(nodes, depth = 0) {
   return ul;
 }
 
+/* ----------------------------------------------- setup sheet (all setups) */
+const CUT_FIELDS = [
+  { key: 'n',      label: 'Spindle speed', unit: 'rpm',    accent: false },
+  { key: 'vf',     label: 'Feed (vf)',     unit: 'mm/min', accent: true },
+  { key: 'fz',     label: 'Feed per tooth',unit: 'mm',     accent: false },
+  { key: 'plunge', label: 'Plunge feed',   unit: 'mm/min', accent: false },
+  { key: 'ap',     label: 'Stepdown (ap)', unit: 'mm',     accent: false },
+  { key: 'ae',     label: 'Stepover (ae)', unit: 'mm',     accent: false },
+];
+const cutGridHTML = (p) => `<div class="cut-grid">${CUT_FIELDS.map((f) => `
+  <div class="cut-field"><span class="cut-field__label">${f.label}</span>
+    <div class="cut-input${f.accent ? ' is-accent' : ''}"><input value="${p[f.key]}" /><span class="unit">${f.unit}</span></div>
+  </div>`).join('')}</div>`;
+
+const opRowHTML = (id) => {
+  const o = OPS[id];
+  return `
+  <div class="op-row" data-op="${id}">
+    <div class="op-row__head">
+      <span class="op-row__icon">${icon('op-operation')}</span>
+      <div class="op-row__text">
+        <div class="op-row__name">${o.name}</div>
+        <div class="op-row__sub">${o.type} · ${o.tool}</div>
+      </div>
+      <span class="op-row__time">${o.time}</span>
+      <span class="op-row__chev">${icon('i-chevdown')}</span>
+    </div>
+    <div class="op-row__body">
+      <div class="section__title">Cutting parameters</div>
+      ${cutGridHTML(o.params)}
+      <div class="form-foot">
+        <div class="form-foot__links"><a>Show all parameters</a><a>Use existing preset</a></div>
+        <div class="form-foot__btns"><button class="btn-ghost" title="Reset">${icon('i-undo')}</button><button class="btn-green">Save changes</button></div>
+      </div>
+    </div>
+  </div>`;
+};
+
+function renderSetupSheet() {
+  const host = $('#setupSheet');
+  host.innerHTML = SETUPS.map((s) => {
+    const allOps = s.parts.flatMap((p) => p.ops);
+    const total = fmtTime(allOps.reduce((a, id) => a + parseTime(OPS[id].time), 0));
+    const parts = s.parts.map((p) => `
+      <div class="sheet-part">${icon('op-part')}${p.name}</div>
+      ${p.ops.map(opRowHTML).join('')}`).join('');
+    return `
+    <div class="setup-block" data-setup="${s.id}">
+      <div class="setup-block__head">
+        <svg class="stg"><use href="#op-setup"/></svg>
+        <span class="setup-block__name">${s.name}</span>
+        <span class="setup-block__meta">
+          <span>${allOps.length} ops</span><span>${icon('i-clock')}${total}</span>
+        </span>
+        <span class="setup-block__chev">${icon('i-chevdown')}</span>
+      </div>
+      <div class="setup-block__body">
+        <div class="wp-block">
+          <div class="section__title">Workpiece setup</div>
+          <div class="kv"><span class="kv__label">Material</span><span class="kv__value"><input class="field" placeholder="Material" /></span></div>
+          <div class="kv"><span class="kv__label">Part zero</span><span class="kv__value">
+            <span class="coord"><b>X</b>${s.wp.x}</span><span class="coord"><b>Y</b>${s.wp.y}</span><span class="coord"><b>Z</b>${s.wp.z}</span>
+          </span></div>
+          <div class="kv"><span class="kv__label">Stock</span><span class="kv__value"><span class="value-tag">${s.wp.stock}</span></span></div>
+          <div class="kv"><span class="kv__label">Fixture</span><span class="kv__value"><button class="linklike">${s.wp.fixture}</button></span></div>
+          <div class="preview">
+            <img src="assets/workpiece-preview.png" alt="Workpiece preview"
+                 onerror="this.style.display='none';this.nextElementSibling.style.display='grid';" />
+            <div class="stage__placeholder" style="display:none;font-size:12px">Workpiece preview</div>
+          </div>
+        </div>
+        ${parts}
+      </div>
+    </div>`;
+  }).join('');
+
+  // collapse a whole setup
+  host.querySelectorAll('.setup-block__head').forEach((h) =>
+    h.addEventListener('click', () => h.parentElement.classList.toggle('is-collapsed')));
+  // expand + select an operation
+  host.querySelectorAll('.op-row__head').forEach((h) =>
+    h.addEventListener('click', () => selectOperation(h.parentElement.dataset.op)));
+}
+
 /* ----------------------------------------------- selection ↔ inspector ↔ 3D */
-function selectOperation(opId, rowEl) {
+function selectOperation(opId) {
   const o = OPS[opId];
   if (!o) return;
+
+  // tree highlight
   document.querySelectorAll('#tree .tree-row.is-selected').forEach((r) => r.classList.remove('is-selected'));
-  (rowEl || document.querySelector(`#tree .tree-row[data-op="${opId}"]`))?.classList.add('is-selected');
+  document.querySelector(`#tree .tree-row[data-op="${opId}"]`)?.classList.add('is-selected');
 
-  // op banner
-  $('#opName').textContent = o.name;
-  $('#opSub').textContent = `${o.type} · ${o.tool} · ${o.part}`;
-
-  // cutting params
-  renderCutGrid(o.params);
+  // setup sheet: single-open accordion + selection, ensure parent setup expanded
+  const row = document.querySelector(`.op-row[data-op="${opId}"]`);
+  document.querySelectorAll('.op-row.is-open, .op-row.is-selected').forEach((r) => r.classList.remove('is-open', 'is-selected'));
+  if (row) {
+    row.classList.add('is-open', 'is-selected');
+    row.closest('.setup-block')?.classList.remove('is-collapsed');
+  }
 
   // floating details card over 3D
   $('#dcTitle').textContent = o.name;
@@ -142,28 +256,9 @@ function selectOperation(opId, rowEl) {
     <div class="details-card__row"><span class="k">Cut time</span><span class="v">${o.time}</span></div>`;
   $('#detailsCard').hidden = false;
 
-  // make sure the Setup tab is showing and inspector open on tablet
   switchTab('setup');
   if (document.body.classList.contains('mobile')) openDrawer('insp');
-}
-
-const CUT_FIELDS = [
-  { key: 'n',      label: 'Spindle speed', unit: 'rpm',    accent: false },
-  { key: 'vf',     label: 'Feed (vf)',     unit: 'mm/min', accent: true },
-  { key: 'fz',     label: 'Feed per tooth',unit: 'mm',     accent: false },
-  { key: 'plunge', label: 'Plunge feed',   unit: 'mm/min', accent: false },
-  { key: 'ap',     label: 'Stepdown (ap)', unit: 'mm',     accent: false },
-  { key: 'ae',     label: 'Stepover (ae)', unit: 'mm',     accent: false },
-];
-function renderCutGrid(p) {
-  $('#cutGrid').innerHTML = CUT_FIELDS.map((f) => `
-    <div class="cut-field">
-      <span class="cut-field__label">${f.label}</span>
-      <div class="cut-input${f.accent ? ' is-accent' : ''}">
-        <input value="${p[f.key]}" />
-        <span class="unit">${f.unit}</span>
-      </div>
-    </div>`).join('');
+  row?.scrollIntoView({ block: 'nearest' });
 }
 
 /* --------------------------------------------------- tools & assemblies */
@@ -297,6 +392,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const tree = renderTree(TREE);
   tree.id = 'tree';
   $('#tree').replaceWith(tree);
+  renderSetupSheet();
   renderTools();
   renderChecklist();
 
