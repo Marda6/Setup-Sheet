@@ -21,6 +21,13 @@ const OPS = {
   p3hole:     op('p3hole',     'Hole machining 1',   'Hole machining',  '8mm Drill',     'Part 3', '0:22', { n: 4200, vf: 320,  fz: 0.04, ap: 8.0, ae: 8,  plunge: 160 }),
   p3cont1:    op('p3cont1',    '2D contouring 1',    '2D contouring',   '8mm End Mill',  'Part 3', '0:35', { n: 5000, vf: 900,  fz: 0.06, ap: 5.0, ae: 6,  plunge: 300 }),
   p3cont2:    op('p3cont2',    '2D contouring 2',    '2D contouring',   '65mm Slot mill','Part 3', '0:29', { n: 1200, vf: 480,  fz: 0.10, ap: 3.0, ae: 4,  plunge: 200 }),
+
+  // ── Setup 2 (part flipped for back-side machining) ──
+  s2face:     op('s2face',     'Face Milling 2',     'Face Milling',    '40mm End Mill', 'S2 · Part 1', '0:48', { n: 3200, vf: 1280, fz: 0.20, ap: 1.5, ae: 30, plunge: 400 }),
+  s2rough:    op('s2rough',    'Roughing waterline 1','Roughing waterline','16mm End Mill','S2 · Part 1', '1:52', { n: 3600, vf: 1450, fz: 0.10, ap: 2.0, ae: 11, plunge: 500 }),
+  s2cont:     op('s2cont',     '2D contouring 1',    '2D contouring',   '8mm End Mill',  'S2 · Part 1', '0:41', { n: 5000, vf: 900,  fz: 0.06, ap: 5.0, ae: 6,  plunge: 300 }),
+  s2chamf:    op('s2chamf',    'Chamfering 1',       'Chamfering',      '8mm End Mill',  'S2 · Part 2', '0:18', { n: 6000, vf: 700,  fz: 0.05, ap: 0.6, ae: 4,  plunge: 250 }),
+  s2hole:     op('s2hole',     'Hole machining 1',   'Hole machining',  '8mm Drill',     'S2 · Part 2', '0:26', { n: 4200, vf: 320,  fz: 0.04, ap: 8.0, ae: 8,  plunge: 160 }),
 };
 
 /* --------------------------------------------------------- operations tree */
@@ -48,6 +55,21 @@ const TREE = [
         { op: 'p3hole', label: 'Hole machining 1', sub: '8mm Drill' },
         { op: 'p3cont1', label: '2D contouring 1', sub: '8mm End Mill' },
         { op: 'p3cont2', label: '2D contouring 2', sub: '65mm Slot mill' },
+      ]},
+    ]},
+    { label: 'Setup 2', icon: 'op-setup', open: true, children: [
+      { label: 'Part 1', icon: 'op-part', open: true, children: [
+        { tool: 'T10',  label: 'T#10: 40mm End Mill' },
+        { op: 's2face', label: 'Face Milling 2', sub: '40mm End Mill' },
+        { tool: 'T63',  label: 'T#63: 16mm End Mill' },
+        { op: 's2rough', label: 'Roughing waterline 1', sub: '16mm End Mill' },
+        { tool: 'T62',  label: 'T#62: 8mm End Mill' },
+        { op: 's2cont', label: '2D contouring 1', sub: '8mm End Mill' },
+      ]},
+      { label: 'Part 2', icon: 'op-part', open: true, children: [
+        { op: 's2chamf', label: 'Chamfering 1', sub: '8mm End Mill' },
+        { tool: 'T137', label: 'T#137: 8mm Drill' },
+        { op: 's2hole', label: 'Hole machining 1', sub: '8mm Drill' },
       ]},
     ]},
   ]},
