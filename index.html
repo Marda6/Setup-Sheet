@@ -2,19 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Sequential machining (WIP) · ENCY Core</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
-<!-- ================= ICON SPRITE (ported 1:1 from ENCY PwIcons + operation-icons) ============= -->
+<!-- ================= ICON SPRITE (ported from ENCY PwIcons + operation-icons) ============= -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <defs>
-    <!-- PwIcons: 24×24, stroke=currentColor 1.5, round caps/joins -->
-    <g id="pw" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></g>
-  </defs>
-  <!-- stroke icons -->
   <symbol id="i-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></symbol>
   <symbol id="i-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></symbol>
   <symbol id="i-chevdown" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></symbol>
@@ -28,24 +23,24 @@
   <symbol id="i-layers" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5 9-5zM3 13l9 5 9-5M3 16.5l9 5 9-5"/></symbol>
   <symbol id="i-share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="12" r="2.4"/><circle cx="17" cy="6" r="2.4"/><circle cx="17" cy="18" r="2.4"/><path d="M8.1 10.9l6.8-3.8M8.1 13.1l6.8 3.8"/></symbol>
   <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 5l11 7-11 7z" fill="currentColor"/></symbol>
+  <symbol id="i-skip-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L9 12l9 6zM6 5v14"/></symbol>
+  <symbol id="i-skip-fwd" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l9 6-9 6zM18 5v14"/></symbol>
   <symbol id="i-printer" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9V4h10v5M7 17H5a1 1 0 0 1-1-1v-5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1h-2M7 14h10v6H7z"/></symbol>
   <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
   <symbol id="i-wand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19l9-9M14.5 5.5l1 1M17 3l.6 1.8L19.5 5.5l-1.6 1L17 8.5l-.9-2L14.5 5.5zM7.5 7.5l.5 1.2 1.2.5-1.2.5L7.5 11l-.5-1.3L5.8 9.2l1.2-.5z"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l4 4 12-11"/></symbol>
-  <symbol id="i-columns" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><path d="M9.5 4.5v15M15 4.5v15"/></symbol>
-  <symbol id="i-sidebar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><path d="M9.5 4.5v15"/><path d="M5.6 8.5h2M5.6 11.5h2"/></symbol>
-  <symbol id="i-split" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><path d="M8.5 4.5v15M14.5 4.5v15"/></symbol>
   <symbol id="i-sliders" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h9M18 7h1M5 12h1M10 12h9M5 17h6M15 17h4"/><circle cx="16" cy="7" r="2" fill="var(--ec-card)"/><circle cx="8" cy="12" r="2" fill="var(--ec-card)"/><circle cx="13" cy="17" r="2" fill="var(--ec-card)"/></symbol>
   <symbol id="i-expand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
   <symbol id="i-target" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></symbol>
   <symbol id="i-axes" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19V5M5 19h14M5 9l-2 2M5 5l-2 2M19 19l2-2M15 19l2 2"/></symbol>
   <symbol id="i-box" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/></symbol>
   <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h16M4 15h16M9 4v16M15 4v16"/></symbol>
-  <symbol id="i-ruler" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="7" width="19" height="10" rx="1.5" transform="rotate(0 12 12)"/><path d="M7 7v3M11 7v4M15 7v3M19 7v4"/></symbol>
+  <symbol id="i-ruler" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="7" width="19" height="10" rx="1.5"/><path d="M7 7v3M11 7v4M15 7v3M19 7v4"/></symbol>
   <symbol id="i-mesh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8c4 3 12 3 16 0M4 12c4 3 12 3 16 0M4 16c4 3 12 3 16 0"/></symbol>
   <symbol id="i-toolbit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3h4v9l-2 3-2-3z"/><path d="M12 15v6"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+  <symbol id="i-undo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5M4 9h11a5 5 0 0 1 0 10h-3"/></symbol>
 
-  <!-- operation-icons: 20×20 two-tone filled -->
   <symbol id="op-machine" viewBox="0 0 20 20">
     <path d="M14.584 4.583c.46 0 .833.374.833.834v5.766c0 .09-.015.178-.043.263-.253.76-1.327.76-1.58 0a.833.833 0 0 1-.044-.263V5.417c0-.46.374-.834.834-.834z" fill="var(--operation-icon-fill)" stroke="var(--operation-icon-accent)" stroke-width=".833" stroke-linejoin="round"/>
     <rect x="2.916" y="5.417" width="6.667" height="11.667" rx="1.25" fill="var(--operation-icon-fill)" stroke="var(--operation-icon-accent)" stroke-width=".833" stroke-linejoin="round"/>
@@ -82,8 +77,9 @@
 
   <!-- ============================== HEADER ============================== -->
   <header class="header">
-    <div class="header__zone">
+    <div class="header__zone header__zone--left">
       <button class="icon-btn" title="Back"><svg><use href="#i-back"/></svg></button>
+      <button class="drawer-toggle" id="openTree" title="Operations"><svg><use href="#i-layers"/></svg></button>
       <div class="title-block">
         <span class="title-block__name">Sequential machining (WIP)</span>
         <span class="title-block__meta">Created Jun 23, 2025 <span class="dot">·</span> Updated Jun 29, 2026</span>
@@ -91,158 +87,174 @@
       <span class="chip"><svg><use href="#i-hash"/></svg>2356</span>
     </div>
 
-    <div class="seg" role="tablist">
-      <button class="seg__btn is-active" data-view="3d"><svg><use href="#i-cube"/></svg>3D view</button>
-      <button class="seg__btn" data-view="sheet"><svg><use href="#i-sheet"/></svg>Setup sheet</button>
-    </div>
-
     <div class="header__zone header__zone--right">
       <span class="avatar" style="background:#00cb9a">ET</span>
-      <button class="pill"><svg><use href="#i-share"/></svg>Share</button>
-      <button class="pill"><svg><use href="#i-download"/></svg>Download</button>
+      <button class="pill"><svg><use href="#i-share"/></svg><span>Share</span></button>
+      <button class="pill"><svg><use href="#i-download"/></svg><span>Download</span></button>
       <span class="hsep"></span>
-      <button class="icon-btn" title="Collaboration chat"><svg><use href="#i-chat"/></svg></button>
+      <button class="icon-btn" title="Collaboration chat">
+        <svg><use href="#i-chat"/></svg><span class="icon-btn__badge">2</span>
+      </button>
       <button class="icon-btn" title="More"><svg><use href="#i-more"/></svg></button>
+      <button class="drawer-toggle" id="openInsp" title="Details"><svg><use href="#i-sheet"/></svg></button>
     </div>
   </header>
 
-  <!-- ============================== BODY =============================== -->
-  <div class="body">
+  <!-- ============================ WORKSPACE ============================ -->
+  <div class="workspace" id="workspace">
 
-    <!-- ------------------------- 3D VIEW ------------------------------- -->
-    <section class="view is-active" id="view-3d">
-      <aside class="ops-panel" id="opsPanel">
-        <div class="ops-panel__head">
-          <span class="ops-panel__title"><svg><use href="#i-layers"/></svg><span>Operations</span></span>
-          <div class="ops-panel__actions">
-            <button class="mini-btn" title="Fields"><svg><use href="#i-sliders"/></svg></button>
-            <button class="mini-btn" id="collapsePanel" title="Collapse"><svg style="transform:scaleX(-1)"><use href="#i-chev"/></svg></button>
-          </div>
-        </div>
-        <div class="ops-panel__body">
-          <ul class="tree" id="tree"><!-- built by app.js --></ul>
-        </div>
-      </aside>
-
-      <div class="stage">
-        <img class="stage__img" src="assets/view-3d.png" alt="3D scene"
-             onerror="this.style.display='none';this.nextElementSibling.style.display='grid';" />
-        <div class="stage__placeholder" style="display:none">
-          Место для 3D-сцены<br><small style="opacity:.6">assets/view-3d.png</small>
-        </div>
-
-        <div class="viewbar">
-          <button class="viewbar__btn is-active" title="Orient"><svg><use href="#i-cube"/></svg></button>
-          <button class="viewbar__btn" title="Part"><svg><use href="#i-box"/></svg></button>
-          <button class="viewbar__btn" title="Toolpath"><svg style="color:var(--ec-green)"><use href="#i-mesh"/></svg></button>
-          <button class="viewbar__btn" title="Tool"><svg style="color:var(--op-coral)"><use href="#i-toolbit"/></svg></button>
-          <button class="viewbar__btn" title="Origin"><svg><use href="#i-target"/></svg></button>
-          <button class="viewbar__btn" title="Axes"><svg><use href="#i-axes"/></svg></button>
-          <div class="viewbar__sep"></div>
-          <button class="viewbar__btn" title="Stock"><svg style="color:var(--ec-green)"><use href="#i-cube"/></svg></button>
-          <button class="viewbar__btn" title="Fixtures"><svg><use href="#i-layers"/></svg></button>
-          <button class="viewbar__btn" title="Grid"><svg><use href="#i-grid"/></svg></button>
-          <button class="viewbar__btn" title="Measure"><svg><use href="#i-ruler"/></svg></button>
-        </div>
-
-        <div class="stage__controls">
-          <button class="ghost-pill"><svg><use href="#i-expand"/></svg>Full</button>
-          <button class="ghost-pill"><svg><use href="#i-target"/></svg>Fit part</button>
-        </div>
-
-        <div class="corner-avatar">N</div>
+    <!-- ---------------------- LEFT: operations tree ------------------- -->
+    <aside class="panel panel--tree" id="treePanel">
+      <div class="rail">
+        <button class="rail__btn is-active" id="expandTree" title="Operations"><svg><use href="#i-layers"/></svg></button>
       </div>
-    </section>
-
-    <!-- ------------------------- SETUP SHEET --------------------------- -->
-    <section class="view" id="view-sheet">
-      <div class="subbar">
-        <div class="subbar__left">
-          <span class="checklist-tag">
-            <span class="checklist-tag__check"><svg><use href="#i-check"/></svg></span>
-            Setup checklist
-          </span>
-          <span class="progress"><span class="progress__fill"></span></span>
-          <span class="progress-label">8/8</span>
-          <button class="link-btn"><svg><use href="#i-play"/></svg>Review</button>
-        </div>
-        <div class="subbar__right">
-          <label class="checkbox-row"><span class="box"></span>Operation sketches</label>
-          <span class="total">Total<b>5:29:38</b></span>
-          <div class="layout-toggle">
-            <button title="Two columns"><svg><use href="#i-columns"/></svg></button>
-            <button class="is-active" title="Three columns"><svg><use href="#i-split"/></svg></button>
-            <button title="Sidebar"><svg><use href="#i-sidebar"/></svg></button>
-          </div>
-          <button class="mini-pill"><svg><use href="#i-wand"/></svg>What-if</button>
-          <button class="mini-btn" title="Print"><svg><use href="#i-printer"/></svg></button>
-          <button class="mini-btn" title="Export PDF"><svg><use href="#i-download"/></svg></button>
+      <div class="panel__head">
+        <span class="panel__title"><svg><use href="#i-layers"/></svg><span>Operations</span></span>
+        <div class="panel__actions">
+          <button class="mini-btn" title="Fields"><svg><use href="#i-sliders"/></svg></button>
+          <button class="mini-btn" id="collapseTree" title="Collapse"><svg style="transform:scaleX(-1)"><use href="#i-chev"/></svg></button>
         </div>
       </div>
+      <div class="panel__body">
+        <ul class="tree" id="tree"></ul>
+      </div>
+    </aside>
 
-      <div class="sheet-cols">
-        <!-- column 1: operations -->
-        <div class="sheet-col">
-          <div class="sheet-col__head">
-            <span class="sheet-col__title"><svg><use href="#op-operation"/></svg>Operations</span>
-            <span class="sheet-col__count">16</span>
+    <!-- ---------------------- CENTER: 3D stage ------------------------ -->
+    <main class="stage">
+      <img class="stage__img" src="assets/view-3d.png" alt="3D scene"
+           onerror="this.style.display='none';this.nextElementSibling.style.display='grid';" />
+      <div class="stage__placeholder" style="display:none">3D scene<br><small style="opacity:.6">assets/view-3d.png</small></div>
+
+      <div class="viewbar">
+        <button class="viewbar__btn is-active" title="Orient"><svg><use href="#i-cube"/></svg></button>
+        <button class="viewbar__btn" title="Part"><svg><use href="#i-box"/></svg></button>
+        <button class="viewbar__btn" title="Toolpath"><svg style="color:var(--ec-green)"><use href="#i-mesh"/></svg></button>
+        <button class="viewbar__btn" title="Tool"><svg style="color:var(--op-coral)"><use href="#i-toolbit"/></svg></button>
+        <button class="viewbar__btn" title="Origin"><svg><use href="#i-target"/></svg></button>
+        <button class="viewbar__btn" title="Axes"><svg><use href="#i-axes"/></svg></button>
+        <div class="viewbar__sep"></div>
+        <button class="viewbar__btn" title="Stock"><svg style="color:var(--ec-green)"><use href="#i-cube"/></svg></button>
+        <button class="viewbar__btn" title="Fixtures"><svg><use href="#i-layers"/></svg></button>
+        <button class="viewbar__btn" title="Grid"><svg><use href="#i-grid"/></svg></button>
+        <button class="viewbar__btn" title="Measure"><svg><use href="#i-ruler"/></svg></button>
+      </div>
+
+      <!-- floating details card, linked to the selected operation -->
+      <div class="details-card" id="detailsCard" hidden>
+        <div class="details-card__accent"></div>
+        <div class="details-card__head">
+          <div>
+            <div class="details-card__eyebrow">Operation details</div>
+            <div class="details-card__title" id="dcTitle">—</div>
           </div>
-          <div class="sheet-col__body">
-            <div class="op-list" id="sheetOps"><!-- built by app.js --></div>
+          <button class="btn-ghost" id="dcClose" title="Close"><svg><use href="#i-close"/></svg></button>
+        </div>
+        <div class="details-card__body" id="dcBody"></div>
+      </div>
+
+      <div class="timeline">
+        <button class="timeline__btn" title="Previous"><svg><use href="#i-skip-back"/></svg></button>
+        <button class="timeline__btn timeline__btn--play" id="playBtn" title="Play"><svg><use href="#i-play"/></svg></button>
+        <button class="timeline__btn" title="Next"><svg><use href="#i-skip-fwd"/></svg></button>
+        <span class="timeline__time">2:19</span>
+        <div class="timeline__track" id="timelineTrack"><div class="timeline__fill" id="timelineFill"></div><div class="timeline__knob" id="timelineKnob"></div></div>
+        <span class="timeline__time">5:29:38</span>
+      </div>
+
+      <div class="stage__controls">
+        <button class="ghost-pill"><svg><use href="#i-expand"/></svg>Full</button>
+        <button class="ghost-pill"><svg><use href="#i-target"/></svg>Fit part</button>
+      </div>
+    </main>
+
+    <!-- ---------------------- RIGHT: inspector ------------------------ -->
+    <aside class="panel panel--insp" id="inspPanel">
+      <div class="insp">
+        <div class="panel__head">
+          <span class="panel__title"><svg><use href="#i-sheet"/></svg><span>Setup sheet</span></span>
+          <div class="panel__actions">
+            <button class="mini-btn drawer-toggle" id="closeInsp" title="Close"><svg><use href="#i-close"/></svg></button>
           </div>
         </div>
 
-        <!-- column 2: workpiece setup -->
-        <div class="sheet-col">
-          <div class="sheet-col__head">
-            <span class="sheet-col__title"><svg><use href="#op-part"/></svg>Workpiece setup</span>
+        <div class="insp__meta">
+          <span class="insp__total">Total<b>5:29:38</b></span>
+          <div class="insp__meta-actions">
+            <button class="mini-pill"><svg><use href="#i-wand"/></svg>What-if</button>
+            <button class="mini-btn" title="Print"><svg><use href="#i-printer"/></svg></button>
+            <button class="mini-btn" title="Export PDF"><svg><use href="#i-download"/></svg></button>
           </div>
-          <div class="sheet-col__body">
-            <div class="wp">
-              <div class="wp-row">
-                <span class="wp-row__label">Material</span>
-                <span class="wp-row__value"><input class="field" placeholder="Material" /></span>
+        </div>
+
+        <div class="insp__tabs" role="tablist">
+          <button class="insp__tab is-active" data-tab="setup"><svg><use href="#i-sheet"/></svg>Setup</button>
+          <button class="insp__tab" data-tab="tools"><svg><use href="#i-toolbit"/></svg>Tools <span class="count">5</span></button>
+          <button class="insp__tab" data-tab="check"><svg><use href="#i-check"/></svg>Checklist</button>
+        </div>
+
+        <div class="insp__body">
+          <!-- SETUP pane -->
+          <section class="insp-pane is-active" id="pane-setup">
+            <div class="op-banner">
+              <span class="op-banner__icon"><svg><use href="#op-operation"/></svg></span>
+              <div class="op-banner__text">
+                <div class="op-banner__name" id="opName">Face Milling 1</div>
+                <div class="op-banner__sub" id="opSub">Face Milling · 40mm End Mill · Part 1</div>
               </div>
-              <div class="wp-row">
-                <span class="wp-row__label">Part zero</span>
-                <span class="wp-row__value">
-                  <span class="coord"><b>X</b>34.8</span>
-                  <span class="coord"><b>Y</b>436.7</span>
-                  <span class="coord"><b>Z</b>949.4</span>
-                </span>
-              </div>
-              <div class="wp-row">
-                <span class="wp-row__label">Stock</span>
-                <span class="wp-row__value"><span class="value-tag">42.0 × 168.0 × 52.0 mm</span></span>
-              </div>
-              <div class="wp-row">
-                <span class="wp-row__label">Fixture</span>
-                <span class="wp-row__value"><button class="wp-btn">Workpiece</button></span>
+              <span class="op-banner__pin" title="Highlighted in 3D"><svg><use href="#i-pin"/></svg></span>
+            </div>
+
+            <div class="section">
+              <div class="section__title">Cutting parameters</div>
+              <div class="cut-grid" id="cutGrid"></div>
+              <div class="form-foot">
+                <div class="form-foot__links">
+                  <a>Show all parameters</a>
+                  <a>Use existing preset</a>
+                </div>
+                <div class="form-foot__btns">
+                  <button class="btn-ghost" title="Reset"><svg><use href="#i-undo"/></svg></button>
+                  <button class="btn-green">Save changes</button>
+                </div>
               </div>
             </div>
-            <div class="wp-preview">
-              <img src="assets/workpiece-preview.png" alt="Workpiece preview"
-                   onerror="this.style.display='none';this.nextElementSibling.style.display='grid';" />
-              <div class="stage__placeholder" style="display:none">
-                3D-превью заготовки<br><small style="opacity:.6">assets/workpiece-preview.png</small>
+
+            <div class="section">
+              <div class="section__title">Workpiece setup</div>
+              <div class="kv"><span class="kv__label">Material</span><span class="kv__value"><input class="field" placeholder="Material" /></span></div>
+              <div class="kv"><span class="kv__label">Part zero</span><span class="kv__value">
+                <span class="coord"><b>X</b>34.8</span><span class="coord"><b>Y</b>436.7</span><span class="coord"><b>Z</b>949.4</span>
+              </span></div>
+              <div class="kv"><span class="kv__label">Stock</span><span class="kv__value"><span class="value-tag">42.0 × 168.0 × 52.0 mm</span></span></div>
+              <div class="kv"><span class="kv__label">Fixture</span><span class="kv__value"><button class="linklike">Workpiece</button></span></div>
+              <div class="preview">
+                <img src="assets/workpiece-preview.png" alt="Workpiece preview"
+                     onerror="this.style.display='none';this.nextElementSibling.style.display='grid';" />
+                <div class="stage__placeholder" style="display:none;font-size:12px">Workpiece preview<br><small style="opacity:.6">assets/workpiece-preview.png</small></div>
               </div>
             </div>
-          </div>
-        </div>
+          </section>
 
-        <!-- column 3: tools & assemblies -->
-        <div class="sheet-col">
-          <div class="sheet-col__head">
-            <span class="sheet-col__title"><svg><use href="#i-toolbit"/></svg>Tools &amp; assemblies</span>
-            <span class="sheet-col__count">5</span>
-          </div>
-          <div class="sheet-col__body">
-            <div class="tool-list" id="toolList"><!-- built by app.js --></div>
-          </div>
+          <!-- TOOLS pane -->
+          <section class="insp-pane" id="pane-tools">
+            <div class="tool-list" id="toolList"></div>
+          </section>
+
+          <!-- CHECKLIST pane -->
+          <section class="insp-pane" id="pane-check">
+            <div class="check-head">
+              <span class="check-head__ring"><svg><use href="#i-check"/></svg></span>
+              <span class="progress"><span class="progress__fill" style="width:100%"></span></span>
+              <span class="progress-label">8/8</span>
+            </div>
+            <div class="check-list" id="checkList"></div>
+          </section>
         </div>
       </div>
-    </section>
+    </aside>
 
+    <div class="backdrop" id="backdrop"></div>
   </div>
 </div>
 
