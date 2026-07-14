@@ -405,6 +405,14 @@ document.addEventListener('DOMContentLoaded', () => {
   $('#collapseTree').addEventListener('click', () => ws.classList.add('tree-collapsed'));
   $('#expandTree').addEventListener('click', () => ws.classList.remove('tree-collapsed'));
 
+  // toggle 3D view on/off (centre stage collapses, setup sheet fills)
+  const t3d = $('#toggle3d');
+  t3d.addEventListener('click', () => {
+    const off = ws.classList.toggle('no-3d');
+    t3d.classList.toggle('is-active', !off);
+    if (off) closeDrawers(); // inspector goes inline on tablet
+  });
+
   // drawer toggles (tablet)
   $('#openTree').addEventListener('click', () => openDrawer('tree'));
   $('#openInsp').addEventListener('click', () => openDrawer('insp'));
