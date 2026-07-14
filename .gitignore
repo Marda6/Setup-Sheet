@@ -1,0 +1,12 @@
+# editor / session
+.claude/
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# raw capture from an earlier data-driven approach (not used by the static prototype)
+capture-2356/

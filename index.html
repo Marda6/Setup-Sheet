@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sequential machining (WIP) · ENCY Core</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<!-- ================= ICON SPRITE (ported 1:1 from ENCY PwIcons + operation-icons) ============= -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- PwIcons: 24×24, stroke=currentColor 1.5, round caps/joins -->
+    <g id="pw" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></g>
+  </defs>
+  <!-- stroke icons -->
+  <symbol id="i-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></symbol>
+  <symbol id="i-chevdown" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="19" cy="12" r="1.5" fill="currentColor"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v10m0 0l-4-4m4 4l4-4M5 19h14"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-12.3 7.6L4 21l1.9-4.7A8.5 8.5 0 1 1 21 11.5z"/></symbol>
+  <symbol id="i-hash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9h14M5 15h14M10 4l-1.5 16M16 4l-1.5 16"/></symbol>
+  <symbol id="i-cube" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3zM12 3v18M4 7.5l8 4.5 8-4.5"/></symbol>
+  <symbol id="i-sheet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="17" height="16" rx="1.5"/><path d="M3.5 9h17M3.5 14.5h17M9 9v11M15 9v11"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5 9-5zM3 13l9 5 9-5M3 16.5l9 5 9-5"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="12" r="2.4"/><circle cx="17" cy="6" r="2.4"/><circle cx="17" cy="18" r="2.4"/><path d="M8.1 10.9l6.8-3.8M8.1 13.1l6.8 3.8"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 5l11 7-11 7z" fill="currentColor"/></symbol>
+  <symbol id="i-printer" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9V4h10v5M7 17H5a1 1 0 0 1-1-1v-5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1h-2M7 14h10v6H7z"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+  <symbol id="i-wand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19l9-9M14.5 5.5l1 1M17 3l.6 1.8L19.5 5.5l-1.6 1L17 8.5l-.9-2L14.5 5.5zM7.5 7.5l.5 1.2 1.2.5-1.2.5L7.5 11l-.5-1.3L5.8 9.2l1.2-.5z"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l4 4 12-11"/></symbol>
+  <symbol id="i-columns" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><path d="M9.5 4.5v15M15 4.5v15"/></symbol>
+  <symbol id="i-sidebar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><path d="M9.5 4.5v15"/><path d="M5.6 8.5h2M5.6 11.5h2"/></symbol>
+  <symbol id="i-split" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><path d="M8.5 4.5v15M14.5 4.5v15"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h9M18 7h1M5 12h1M10 12h9M5 17h6M15 17h4"/><circle cx="16" cy="7" r="2" fill="var(--ec-card)"/><circle cx="8" cy="12" r="2" fill="var(--ec-card)"/><circle cx="13" cy="17" r="2" fill="var(--ec-card)"/></symbol>
+  <symbol id="i-expand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></symbol>
+  <symbol id="i-axes" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19V5M5 19h14M5 9l-2 2M5 5l-2 2M19 19l2-2M15 19l2 2"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h16M4 15h16M9 4v16M15 4v16"/></symbol>
+  <symbol id="i-ruler" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="7" width="19" height="10" rx="1.5" transform="rotate(0 12 12)"/><path d="M7 7v3M11 7v4M15 7v3M19 7v4"/></symbol>
+  <symbol id="i-mesh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8c4 3 12 3 16 0M4 12c4 3 12 3 16 0M4 16c4 3 12 3 16 0"/></symbol>
+  <symbol id="i-toolbit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3h4v9l-2 3-2-3z"/><path d="M12 15v6"/></symbol>
+
+  <!-- operation-icons: 20×20 two-tone filled -->
+  <symbol id="op-machine" viewBox="0 0 20 20">
+    <path d="M14.584 4.583c.46 0 .833.374.833.834v5.766c0 .09-.015.178-.043.263-.253.76-1.327.76-1.58 0a.833.833 0 0 1-.044-.263V5.417c0-.46.374-.834.834-.834z" fill="var(--operation-icon-fill)" stroke="var(--operation-icon-accent)" stroke-width=".833" stroke-linejoin="round"/>
+    <rect x="2.916" y="5.417" width="6.667" height="11.667" rx="1.25" fill="var(--operation-icon-fill)" stroke="var(--operation-icon-accent)" stroke-width=".833" stroke-linejoin="round"/>
+    <rect x="2.916" y="13.749" width="14.167" height="4.167" rx="1.25" fill="var(--operation-icon-fill)" stroke="var(--operation-icon-accent)" stroke-width=".833" stroke-linejoin="round"/>
+    <rect x="8.75" y="3.749" width="4.167" height="4.167" rx="1.25" fill="var(--operation-icon-fill)" stroke="var(--operation-icon-accent)" stroke-width=".833" stroke-linejoin="round"/>
+    <rect x="12.083" y="2.083" width="5" height="6.667" rx="1.25" fill="var(--operation-icon-fill)" stroke="var(--operation-icon-accent)" stroke-width=".833" stroke-linejoin="round"/>
+    <rect x="5.416" y="2.083" width="4.167" height="8.333" rx="1.25" fill="var(--operation-icon-fill)" stroke="var(--operation-icon-accent)" stroke-width=".833" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="op-setup" viewBox="0 0 20 20">
+    <circle cx="10" cy="10" r="7.083" fill="#F6F6F6" stroke="#3B3E48" stroke-width=".833"/>
+    <path d="M17.5 10c0-.985-.194-1.96-.571-2.87A7.5 7.5 0 0 0 10 2.5V10h7.5z" fill="#3B3E48"/>
+    <path d="M2.5 10a7.5 7.5 0 0 0 7.5 7.5V10H2.5z" fill="#3B3E48"/>
+  </symbol>
+  <symbol id="op-part" viewBox="0 0 20 20">
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M9.554 2.121a.9.9 0 0 1 .892 0l6.111 3.552c.274.16.443.453.443.77v7.116a.89.89 0 0 1-.443.769l-6.111 3.552a.9.9 0 0 1-.892 0l-6.111-3.552A.89.89 0 0 1 3 13.558V6.442c0-.317.169-.61.442-.769L9.554 2.121zM9.999 6.948a3.052 3.052 0 1 0 0 6.104 3.052 3.052 0 0 0 0-6.104z" fill="var(--operation-icon-fill)"/>
+  </symbol>
+  <symbol id="op-operation" viewBox="0 0 20 20">
+    <rect x=".625" y=".625" width="18.75" height="18.75" rx="1.875" stroke="var(--operation-icon-fill)" stroke-width="1.25"/>
+    <path d="M11.25 8.75h1.25V2.5h-1.25z" fill="var(--operation-icon-fill)"/>
+    <path d="M12.5 8.75h1.25V2.5H12.5z" fill="var(--operation-icon-fill)"/>
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M2.5 17.5h6.25V15A5 5 0 0 1 8.75 5V2.5H2.5z" fill="var(--operation-icon-fill)"/>
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M7.5 10 10 10V7.5A2.5 2.5 0 0 0 7.5 10z" fill="var(--operation-icon-fill)"/>
+    <path d="M7.5 10a2.5 2.5 0 0 0 2.5 2.5V10z" fill="var(--operation-icon-fill)"/>
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M10 7.5h2.5V10H10z" fill="var(--operation-icon-fill)"/>
+    <path d="M10 12.5h2.5V10H10z" fill="var(--operation-icon-fill)"/>
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M15 7.5V10h-2.5V7.5z" fill="var(--operation-icon-fill)"/>
+    <path d="M12.5 12.5H15V10h-2.5z" fill="var(--operation-icon-fill)"/>
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M15 10V7.5A2.5 2.5 0 0 1 17.5 10z" fill="var(--operation-icon-fill)"/>
+    <path d="M15 12.5A2.5 2.5 0 0 0 17.5 10H15z" fill="var(--operation-icon-fill)"/>
+  </symbol>
+</svg>
+
+<div class="app">
+
+  <!-- ============================== HEADER ============================== -->
+  <header class="header">
+    <div class="header__zone">
+      <button class="icon-btn" title="Back"><svg><use href="#i-back"/></svg></button>
+      <div class="title-block">
+        <span class="title-block__name">Sequential machining (WIP)</span>
+        <span class="title-block__meta">Created Jun 23, 2025 <span class="dot">·</span> Updated Jun 29, 2026</span>
+      </div>
+      <span class="chip"><svg><use href="#i-hash"/></svg>2356</span>
+    </div>
+
+    <div class="seg" role="tablist">
+      <button class="seg__btn is-active" data-view="3d"><svg><use href="#i-cube"/></svg>3D view</button>
+      <button class="seg__btn" data-view="sheet"><svg><use href="#i-sheet"/></svg>Setup sheet</button>
+    </div>
+
+    <div class="header__zone header__zone--right">
+      <span class="avatar" style="background:#00cb9a">ET</span>
+      <button class="pill"><svg><use href="#i-share"/></svg>Share</button>
+      <button class="pill"><svg><use href="#i-download"/></svg>Download</button>
+      <span class="hsep"></span>
+      <button class="icon-btn" title="Collaboration chat"><svg><use href="#i-chat"/></svg></button>
+      <button class="icon-btn" title="More"><svg><use href="#i-more"/></svg></button>
+    </div>
+  </header>
+
+  <!-- ============================== BODY =============================== -->
+  <div class="body">
+
+    <!-- ------------------------- 3D VIEW ------------------------------- -->
+    <section class="view is-active" id="view-3d">
+      <aside class="ops-panel" id="opsPanel">
+        <div class="ops-panel__head">
+          <span class="ops-panel__title"><svg><use href="#i-layers"/></svg><span>Operations</span></span>
+          <div class="ops-panel__actions">
+            <button class="mini-btn" title="Fields"><svg><use href="#i-sliders"/></svg></button>
+            <button class="mini-btn" id="collapsePanel" title="Collapse"><svg style="transform:scaleX(-1)"><use href="#i-chev"/></svg></button>
+          </div>
+        </div>
+        <div class="ops-panel__body">
+          <ul class="tree" id="tree"><!-- built by app.js --></ul>
+        </div>
+      </aside>
+
+      <div class="stage">
+        <img class="stage__img" src="assets/view-3d.png" alt="3D scene"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='grid';" />
+        <div class="stage__placeholder" style="display:none">
+          Место для 3D-сцены<br><small style="opacity:.6">assets/view-3d.png</small>
+        </div>
+
+        <div class="viewbar">
+          <button class="viewbar__btn is-active" title="Orient"><svg><use href="#i-cube"/></svg></button>
+          <button class="viewbar__btn" title="Part"><svg><use href="#i-box"/></svg></button>
+          <button class="viewbar__btn" title="Toolpath"><svg style="color:var(--ec-green)"><use href="#i-mesh"/></svg></button>
+          <button class="viewbar__btn" title="Tool"><svg style="color:var(--op-coral)"><use href="#i-toolbit"/></svg></button>
+          <button class="viewbar__btn" title="Origin"><svg><use href="#i-target"/></svg></button>
+          <button class="viewbar__btn" title="Axes"><svg><use href="#i-axes"/></svg></button>
+          <div class="viewbar__sep"></div>
+          <button class="viewbar__btn" title="Stock"><svg style="color:var(--ec-green)"><use href="#i-cube"/></svg></button>
+          <button class="viewbar__btn" title="Fixtures"><svg><use href="#i-layers"/></svg></button>
+          <button class="viewbar__btn" title="Grid"><svg><use href="#i-grid"/></svg></button>
+          <button class="viewbar__btn" title="Measure"><svg><use href="#i-ruler"/></svg></button>
+        </div>
+
+        <div class="stage__controls">
+          <button class="ghost-pill"><svg><use href="#i-expand"/></svg>Full</button>
+          <button class="ghost-pill"><svg><use href="#i-target"/></svg>Fit part</button>
+        </div>
+
+        <div class="corner-avatar">N</div>
+      </div>
+    </section>
+
+    <!-- ------------------------- SETUP SHEET --------------------------- -->
+    <section class="view" id="view-sheet">
+      <div class="subbar">
+        <div class="subbar__left">
+          <span class="checklist-tag">
+            <span class="checklist-tag__check"><svg><use href="#i-check"/></svg></span>
+            Setup checklist
+          </span>
+          <span class="progress"><span class="progress__fill"></span></span>
+          <span class="progress-label">8/8</span>
+          <button class="link-btn"><svg><use href="#i-play"/></svg>Review</button>
+        </div>
+        <div class="subbar__right">
+          <label class="checkbox-row"><span class="box"></span>Operation sketches</label>
+          <span class="total">Total<b>5:29:38</b></span>
+          <div class="layout-toggle">
+            <button title="Two columns"><svg><use href="#i-columns"/></svg></button>
+            <button class="is-active" title="Three columns"><svg><use href="#i-split"/></svg></button>
+            <button title="Sidebar"><svg><use href="#i-sidebar"/></svg></button>
+          </div>
+          <button class="mini-pill"><svg><use href="#i-wand"/></svg>What-if</button>
+          <button class="mini-btn" title="Print"><svg><use href="#i-printer"/></svg></button>
+          <button class="mini-btn" title="Export PDF"><svg><use href="#i-download"/></svg></button>
+        </div>
+      </div>
+
+      <div class="sheet-cols">
+        <!-- column 1: operations -->
+        <div class="sheet-col">
+          <div class="sheet-col__head">
+            <span class="sheet-col__title"><svg><use href="#op-operation"/></svg>Operations</span>
+            <span class="sheet-col__count">16</span>
+          </div>
+          <div class="sheet-col__body">
+            <div class="op-list" id="sheetOps"><!-- built by app.js --></div>
+          </div>
+        </div>
+
+        <!-- column 2: workpiece setup -->
+        <div class="sheet-col">
+          <div class="sheet-col__head">
+            <span class="sheet-col__title"><svg><use href="#op-part"/></svg>Workpiece setup</span>
+          </div>
+          <div class="sheet-col__body">
+            <div class="wp">
+              <div class="wp-row">
+                <span class="wp-row__label">Material</span>
+                <span class="wp-row__value"><input class="field" placeholder="Material" /></span>
+              </div>
+              <div class="wp-row">
+                <span class="wp-row__label">Part zero</span>
+                <span class="wp-row__value">
+                  <span class="coord"><b>X</b>34.8</span>
+                  <span class="coord"><b>Y</b>436.7</span>
+                  <span class="coord"><b>Z</b>949.4</span>
+                </span>
+              </div>
+              <div class="wp-row">
+                <span class="wp-row__label">Stock</span>
+                <span class="wp-row__value"><span class="value-tag">42.0 × 168.0 × 52.0 mm</span></span>
+              </div>
+              <div class="wp-row">
+                <span class="wp-row__label">Fixture</span>
+                <span class="wp-row__value"><button class="wp-btn">Workpiece</button></span>
+              </div>
+            </div>
+            <div class="wp-preview">
+              <img src="assets/workpiece-preview.png" alt="Workpiece preview"
+                   onerror="this.style.display='none';this.nextElementSibling.style.display='grid';" />
+              <div class="stage__placeholder" style="display:none">
+                3D-превью заготовки<br><small style="opacity:.6">assets/workpiece-preview.png</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- column 3: tools & assemblies -->
+        <div class="sheet-col">
+          <div class="sheet-col__head">
+            <span class="sheet-col__title"><svg><use href="#i-toolbit"/></svg>Tools &amp; assemblies</span>
+            <span class="sheet-col__count">5</span>
+          </div>
+          <div class="sheet-col__body">
+            <div class="tool-list" id="toolList"><!-- built by app.js --></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
