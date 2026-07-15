@@ -68,26 +68,22 @@ const cutGridHTML = (p) => `<div class="cut-grid">${CUT_FIELDS.map((f) => `
     <div class="cut-input${f.accent?' is-accent':''}"><input value="${p[f.key]}" /><span class="unit">${f.unit}</span></div>
   </div>`).join('')}</div>`;
 
-function opBodyHTML(o, withFeatures) {
-  const feats = withFeatures ? (FEATS[o.type] || []) : null;
-  const featBlock = feats ? `
+function editBodyHTML(o) {
+  const feats = FEATS[o.type] || [];
+  return `
     <div class="edit-sub">Features</div>
     <div class="feat-list">${feats.map(([n,t]) => `
       <div class="feat-row"><span class="feat-row__dot"></span><span class="feat-row__name">${n}</span><span class="feat-row__time">${t}</span><span class="feat-row__eye">${icon('i-eye')}</span></div>`).join('')}</div>
     <div class="edit-sub">Tool</div>
-    <div class="tool-chip"><span class="tool-chip__dot"></span>${o.tool}<span class="tool-chip__swap">${icon('i-undo')}</span></div>` : '';
-  return `
-    <div class="op-item__body">
-      ${featBlock}
-      <div class="edit-sub">Cutting parameters</div>
-      ${cutGridHTML(o.params)}
-      <div class="form-foot">
-        <div class="form-foot__links"><a>Show all parameters</a><a>Use existing preset</a></div>
-        <div class="form-foot__btns"><button class="btn-ghost" title="Reset">${icon('i-undo')}</button><button class="btn-green">Save changes</button></div>
-      </div>
+    <div class="tool-chip"><span class="tool-chip__dot"></span>${o.tool}<span class="tool-chip__swap">${icon('i-undo')}</span></div>
+    <div class="edit-sub">Cutting parameters</div>
+    ${cutGridHTML(o.params)}
+    <div class="form-foot">
+      <div class="form-foot__links"><a>Show all parameters</a><a>Use existing preset</a></div>
+      <div class="form-foot__btns"><button class="btn-ghost" title="Reset">${icon('i-undo')}</button><button class="btn-green">Save changes</button></div>
     </div>`;
 }
-function opItemHTML(id, withFeatures) {
+function opItemHTML(id) {
   const o = OPS[id];
   return `
   <div class="op-item" data-op="${id}">
@@ -98,7 +94,6 @@ function opItemHTML(id, withFeatures) {
       <span class="op-item__time">${o.time}</span>
       <button class="op-item__play" title="Simulate">${icon('i-play')}</button>
     </div>
-    ${opBodyHTML(o, withFeatures)}
   </div>`;
 }
 
@@ -118,9 +113,17 @@ function renderOverview() {
         <div class="kv"><span class="kv__label">Stock size</span><span class="kv__value"><span class="value-tag">42.0 × 168.0 × 52.0 mm</span></span></div>
         <div class="kv"><span class="kv__label">Part dims</span><span class="kv__value"><span class="value-tag">112 × 28 × 23 mm</span></span></div>
       </div></div>
-    <div class="acc"><div class="acc__head">Setups<span class="chev">${icon('i-chevdown')}</span></div>
+    <div class="acc"><div class="acc__head">Workpiece setup<span class="chev">${icon('i-chevdown')}</span></div>
       <div class="acc__body">
-        ${SETUPS.map((s,i) => `<div class="kv"><span class="kv__label">${s.name}</span><span class="kv__value"><button class="selectish">${i?'Fixed jaw vise':'6" Fixed jaw vise'} ${icon('i-chevdown')}</button></span></div>`).join('')}
+        ${SETUPS.map((s) => `
+          <div class="wp-setup">
+            <div class="wp-setup__name">${s.name}</div>
+            <div class="kv"><span class="kv__label">Material</span><span class="kv__value"><input class="field" placeholder="Material" /></span></div>
+            <div class="kv"><span class="kv__label">Part zero</span><span class="kv__value"><span class="coord"><b>X</b>${s.wp.x}</span><span class="coord"><b>Y</b>${s.wp.y}</span><span class="coord"><b>Z</b>${s.wp.z}</span></span></div>
+            <div class="kv"><span class="kv__label">Stock</span><span class="kv__value"><span class="value-tag">${s.wp.stock}</span></span></div>
+            <div class="kv"><span class="kv__label">Fixture</span><span class="kv__value"><button class="linklike">${s.wp.fixture}</button></span></div>
+            <div class="preview"><img src="assets/workpiece-preview.png" alt="preview" onerror="this.style.display='none'"/></div>
+          </div>`).join('')}
       </div></div>
     <div class="acc"><div class="acc__head">Holes<span class="chev">${icon('i-chevdown')}</span></div>
       <div class="acc__body">
@@ -140,7 +143,7 @@ function renderOperations() {
     const total = fmtTime(allOps.reduce((a,id) => a+parseTime(OPS[id].time), 0));
     const body = s.parts.map((p) => `
       <div class="sheet-part">${icon('op-part')}${p.name}</div>
-      ${p.ops.map((id) => opItemHTML(id, true)).join('')}`).join('');
+      ${p.ops.map((id) => opItemHTML(id)).join('')}`).join('');
     return `
     <div class="setup-block" data-setup="${s.id}">
       <div class="setup-block__head">
@@ -150,37 +153,6 @@ function renderOperations() {
         <span class="setup-block__chev">${icon('i-chevdown')}</span>
       </div>
       <div class="setup-block__body">${body}</div>
-    </div>`;
-  }).join('');
-}
-
-/* ------------------------------------------------------------- Setup sheet */
-function renderSetupSheet() {
-  $('#setupSheet').innerHTML = SETUPS.map((s) => {
-    const allOps = s.parts.flatMap((p) => p.ops);
-    const total = fmtTime(allOps.reduce((a,id) => a+parseTime(OPS[id].time), 0));
-    const body = s.parts.map((p) => `
-      <div class="sheet-part">${icon('op-part')}${p.name}</div>
-      ${p.ops.map((id) => opItemHTML(id, false)).join('')}`).join('');
-    return `
-    <div class="setup-block" data-setup="${s.id}">
-      <div class="setup-block__head">
-        <span class="setup-block__status"></span><svg class="stg"><use href="#op-setup"/></svg>
-        <span class="setup-block__name">${s.name}</span>
-        <span class="setup-block__meta"><span>${allOps.length} ops</span><span>${icon('i-clock')}${total}</span></span>
-        <span class="setup-block__chev">${icon('i-chevdown')}</span>
-      </div>
-      <div class="setup-block__body">
-        <div class="wp-block">
-          <div class="section__title">Workpiece setup</div>
-          <div class="kv"><span class="kv__label">Material</span><span class="kv__value"><input class="field" placeholder="Material" /></span></div>
-          <div class="kv"><span class="kv__label">Part zero</span><span class="kv__value"><span class="coord"><b>X</b>${s.wp.x}</span><span class="coord"><b>Y</b>${s.wp.y}</span><span class="coord"><b>Z</b>${s.wp.z}</span></span></div>
-          <div class="kv"><span class="kv__label">Stock</span><span class="kv__value"><span class="value-tag">${s.wp.stock}</span></span></div>
-          <div class="kv"><span class="kv__label">Fixture</span><span class="kv__value"><button class="linklike">${s.wp.fixture}</button></span></div>
-          <div class="preview"><img src="assets/workpiece-preview.png" alt="preview" onerror="this.style.display='none'"/></div>
-        </div>
-        ${body}
-      </div>
     </div>`;
   }).join('');
 }
@@ -237,11 +209,15 @@ function renderTable(view) {
 function selectOperation(opId) {
   const o = OPS[opId];
   if (!o) return;
-  $$('.op-item').forEach((r) => r.classList.remove('is-open','is-selected'));
+  $$('.op-item').forEach((r) => r.classList.remove('is-selected'));
   $$(`.op-item[data-op="${opId}"]`).forEach((r) => {
-    r.classList.add('is-open','is-selected');
+    r.classList.add('is-selected');
     r.closest('.setup-block')?.classList.remove('is-collapsed');
   });
+  // edit panel (flyout right of the list)
+  $('#editTitle').textContent = o.name;
+  $('#editBody').innerHTML = editBodyHTML(o);
+  $('#editpanel').classList.add('is-open');
   // details card
   $('#dcTitle').textContent = o.name;
   $('#dcBody').innerHTML = `
@@ -275,13 +251,15 @@ function delegateAccordions(root) {
 document.addEventListener('DOMContentLoaded', () => {
   renderOverview();
   renderOperations();
-  renderSetupSheet();
   renderTable('tools');
 
   // left tabs
   $$('.ltab').forEach((t) => t.addEventListener('click', () => {
     $$('.ltab').forEach((x) => x.classList.toggle('is-active', x === t));
     $$('.ltab-pane').forEach((p) => p.classList.toggle('is-active', p.id === `lp-${t.dataset.tab}`));
+    // the operation edit flyout is contextual to the Operations tab
+    if (t.dataset.tab !== 'operations') $('#editpanel').classList.remove('is-open');
+    else if ($('.op-item.is-selected')) $('#editpanel').classList.add('is-open');
   }));
 
   // accordions + op items (event delegation on the whole left panel)
@@ -311,6 +289,12 @@ document.addEventListener('DOMContentLoaded', () => {
     pane3d.style.flex = `0 0 ${h}px`;
   });
   divider.addEventListener('pointerup', () => { drag = null; });
+
+  // edit panel close
+  $('#editClose').addEventListener('click', () => {
+    $('#editpanel').classList.remove('is-open');
+    $$('.op-item.is-selected').forEach((r) => r.classList.remove('is-selected'));
+  });
 
   // details close + timeline
   $('#dcClose').addEventListener('click', () => { $('#detailsCard').hidden = true; });

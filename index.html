@@ -105,14 +105,24 @@
     <div class="leftpanel__tabs" role="tablist">
       <button class="ltab" data-tab="overview">Overview</button>
       <button class="ltab is-active" data-tab="operations">Operations</button>
-      <button class="ltab" data-tab="sheet">Setup sheet</button>
     </div>
 
     <div class="leftpanel__body">
       <div class="ltab-pane" id="lp-overview"></div>
       <div class="ltab-pane is-active" id="lp-operations"></div>
-      <div class="ltab-pane" id="lp-sheet"><div id="setupSheet"></div></div>
     </div>
+  </aside>
+
+  <!-- ===================== OPERATION EDIT PANEL (flyout right of the list) ===== -->
+  <aside class="editpanel" id="editpanel">
+    <div class="editpanel__head">
+      <div class="editpanel__titlewrap">
+        <div class="editpanel__eyebrow">Editing operation</div>
+        <div class="editpanel__title" id="editTitle">—</div>
+      </div>
+      <button class="mini-btn" id="editClose" title="Close"><svg><use href="#i-close"/></svg></button>
+    </div>
+    <div class="editpanel__body" id="editBody"></div>
   </aside>
 
   <!-- ===================== CENTER DOCK ===================== -->
