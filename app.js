@@ -75,7 +75,7 @@ function editBodyHTML(o) {
     <div class="feat-list">${feats.map(([n,t]) => `
       <div class="feat-row"><span class="feat-row__dot"></span><span class="feat-row__name">${n}</span><span class="feat-row__time">${t}</span><span class="feat-row__eye">${icon('i-eye')}</span></div>`).join('')}</div>
     <div class="edit-sub">Tool</div>
-    <div class="tool-chip"><span class="tool-chip__dot"></span>${o.tool}<span class="tool-chip__swap">${icon('i-undo')}</span></div>
+    <div class="tool-chip"><span class="tool-chip__dot"></span>${TOOL_BY_NAME[o.tool] ? `${TOOL_BY_NAME[o.tool].tno} · ` : ''}${o.tool}<span class="tool-chip__swap">${icon('i-undo')}</span></div>
     <div class="edit-sub">Cutting parameters</div>
     ${cutGridHTML(o.params)}
     <div class="form-foot">
@@ -165,16 +165,17 @@ function renderTable(view) {
   if (view === 'tools') {
     host.innerHTML = `
     <table class="dtable">
-      <thead><tr><th>Name</th><th>Ø</th><th>Flutes</th><th>Flute len.</th><th>Len below H.</th><th>Corner rad.</th><th>Source library</th></tr></thead>
+      <thead><tr><th>T#</th><th>Name</th><th>Ø</th><th>Flutes</th><th>Flute len.</th><th>Len below H.</th><th>Corner rad.</th><th>Source library</th></tr></thead>
       <tbody>
-        <tr class="dtable__group"><td colspan="7">Active tools (${TOOLS.length})</td></tr>
+        <tr class="dtable__group"><td colspan="8">Active tools (${TOOLS.length})</td></tr>
         ${TOOLS.map((t) => `
           <tr data-tool="${t.name}">
+            <td><span class="tag-tno">${t.tno}</span></td>
             <td><span class="dtable__name">${icon('i-toolbit')}${t.name}</span></td>
             <td>${t.dia} mm</td><td>${t.flutes}</td><td>${t.fluteLen} mm</td><td>${t.lenBelowH} mm</td><td>${t.cornerRad}</td>
             <td><span class="src">${icon('i-warn')}${t.source}</span></td>
           </tr>`).join('')}
-        <tr class="dtable__group"><td colspan="7">Unused tools (1074)</td></tr>
+        <tr class="dtable__group"><td colspan="8">Unused tools (1074)</td></tr>
       </tbody>
     </table>`;
     $$('#tableBody tr[data-tool]').forEach((tr) => tr.addEventListener('click', () => {
@@ -232,6 +233,8 @@ function selectOperation(opId) {
     $(`#tableBody tr[data-tool="${o.tool}"]`)?.classList.add('is-selected');
   }
   $$(`.op-item[data-op="${opId}"] .op-item__head`)[0]?.scrollIntoView({ block:'nearest' });
+  // tablet portrait: the drawer would cover the edit flyout — close it
+  if (matchMedia('(max-width:900px)').matches) closeDrawer();
 }
 
 /* ---------------------------------------------------------------- wiring */
@@ -271,8 +274,12 @@ document.addEventListener('DOMContentLoaded', () => {
   $$('#tableMenu button').forEach((b) => b.addEventListener('click', () => { renderTable(b.dataset.view); menu.hidden = true; }));
   document.addEventListener('click', () => { menu.hidden = true; });
 
-  // dock collapse
-  $('#collapse3d').addEventListener('click', () => $('#pane3d').classList.toggle('is-collapsed'));
+  // dock collapse (clear the inline flex left by divider drags, or it wins over .is-collapsed)
+  $('#collapse3d').addEventListener('click', () => {
+    const p = $('#pane3d');
+    p.classList.toggle('is-collapsed');
+    if (p.classList.contains('is-collapsed')) p.style.flex = '';
+  });
   $('#collapseTable').addEventListener('click', () => $('#paneTable').classList.toggle('is-collapsed'));
 
   // dock divider drag
@@ -304,14 +311,25 @@ document.addEventListener('DOMContentLoaded', () => {
     $('#playBtn').querySelector('use').setAttribute('href', playing ? '#i-close' : '#i-play');
   });
 
-  // left drawer (tablet): rail "Project" icon toggles
-  const ws = $('#workspace'), left = $('#leftpanel'), backdrop = $('#backdrop');
-  $$('.railnav__btn')[0].addEventListener('click', () => {
-    left.classList.toggle('is-open'); document.body.classList.toggle('left-open', left.classList.contains('is-open'));
-  });
-  backdrop.addEventListener('click', () => { left.classList.remove('is-open'); document.body.classList.remove('left-open'); });
+  // left drawer (tablet portrait): explicit toggle button + rail "Project" icon
+  const left = $('#leftpanel'), backdrop = $('#backdrop');
+  const toggleDrawer = () => {
+    left.classList.toggle('is-open');
+    document.body.classList.toggle('left-open', left.classList.contains('is-open'));
+  };
+  $('#panelToggle').addEventListener('click', toggleDrawer);
+  $$('.railnav__btn')[0].addEventListener('click', toggleDrawer);
+  backdrop.addEventListener('click', closeDrawer);
 
   // default: keep Setup 1 open, collapse Setup 2, in both panes
   $$('.setup-block[data-setup="setup2"]').forEach((b) => b.classList.add('is-collapsed'));
   selectOperation('faceMill1');
+  // tablet: don't cover the navigator (≤1080) with the edit flyout on first load —
+  // show the list + 3D; the flyout opens on the first explicit tap
+  if (matchMedia('(max-width:1080px)').matches) $('#editpanel').classList.remove('is-open');
 });
+
+function closeDrawer() {
+  $('#leftpanel').classList.remove('is-open');
+  document.body.classList.remove('left-open');
+}
