@@ -1,0 +1,44 @@
+/* ============================================================================
+   ENCY Core — v2 (clean redesign, built step by step).
+   Tokens only; components are added as we design them.
+   ========================================================================= */
+
+@font-face { font-family:'Inter'; font-weight:400; font-display:swap; src:url('../assets/fonts/inter-400.woff2') format('woff2'); }
+@font-face { font-family:'Inter'; font-weight:500; font-display:swap; src:url('../assets/fonts/inter-500.woff2') format('woff2'); }
+@font-face { font-family:'Inter'; font-weight:600; font-display:swap; src:url('../assets/fonts/inter-600.woff2') format('woff2'); }
+@font-face { font-family:'Inter'; font-weight:700; font-display:swap; src:url('../assets/fonts/inter-700.woff2') format('woff2'); }
+
+:root {
+  --ec-bg:#0e1010; --ec-bg-80:rgba(14,16,16,.80); --ec-bg-96:rgba(14,16,16,.96);
+  --ec-rail:#121415; --ec-card:#16191a; --ec-card-2:#1b1f20; --ec-popover:#1e2223;
+  --ec-fg-100:#f5f5f5; --ec-fg-96:rgba(245,245,245,.96); --ec-fg-80:rgba(245,245,245,.80);
+  --ec-fg-72:rgba(245,245,245,.72); --ec-fg-64:rgba(245,245,245,.64); --ec-fg-56:rgba(245,245,245,.56);
+  --ec-fg-48:rgba(245,245,245,.48); --ec-fg-32:rgba(245,245,245,.32); --ec-fg-24:rgba(245,245,245,.24);
+  --ec-fg-16:rgba(245,245,245,.16); --ec-fg-12:rgba(245,245,245,.12); --ec-fg-8:rgba(245,245,245,.08);
+  --ec-fg-6:rgba(245,245,245,.06); --ec-fg-4:rgba(245,245,245,.04);
+  --ec-green:#00a36d; --ec-green-08:rgba(0,163,109,.08); --ec-green-16:rgba(0,163,109,.16);
+  --ec-blue:#1269d9; --ec-blue-soft:#46acff; --ec-blue-tint:rgba(18,105,217,.18);
+  --ec-amber:#ebc14a; --ec-sel:#ff8a4c;
+  --op-yellow:#ebda84; --op-blue:#84c9eb; --op-coral:#ff7072; --op-green:#84ebb8; --op-violet:#9584eb;
+  --operation-icon-fill:#d8dade; --operation-icon-accent:#3b3e48;
+  --ec-font:'Inter',system-ui,-apple-system,sans-serif;
+  --ec-radius:4px; --ec-radius-md:9px; --ec-radius-lg:14px;
+  --divider:var(--ec-fg-8); --border:var(--ec-fg-16);
+}
+
+* { box-sizing:border-box; margin:0; padding:0; }
+html,body { height:100%; }
+body { font-family:var(--ec-font); font-size:12px; line-height:16px; color:var(--ec-fg-100);
+  background:var(--ec-bg); -webkit-font-smoothing:antialiased; overflow:hidden; }
+button { font-family:inherit; cursor:pointer; border:none; background:none; color:inherit; }
+svg { display:block; }
+ul { list-style:none; }
+input { font-family:inherit; }
+[hidden] { display:none !important; }
+
+::-webkit-scrollbar { width:10px; height:10px; }
+::-webkit-scrollbar-thumb { background:var(--ec-fg-12); border-radius:999px; border:3px solid transparent; background-clip:content-box; }
+::-webkit-scrollbar-thumb:hover { background:var(--ec-fg-24); background-clip:content-box; }
+
+/* temporary: empty-canvas note, remove with the first real block */
+.blank-note { height:100vh; display:grid; place-items:center; color:var(--ec-fg-24); font-size:13px; text-align:center; }

@@ -14,7 +14,7 @@ const TYPES = { '.html':'text/html', '.css':'text/css', '.js':'text/javascript',
 createServer(async (req, res) => {
   try {
     let p = decodeURIComponent(req.url.split('?')[0].split('#')[0]);
-    if (p === '/' || p === '') p = '/index.html';
+    if (p === '' || p.endsWith('/')) p += p ? 'index.html' : '/index.html';
     const file = normalize(join(ROOT, p));
     if (!file.startsWith(ROOT)) { res.writeHead(403).end(); return; }
     const buf = await readFile(file);
