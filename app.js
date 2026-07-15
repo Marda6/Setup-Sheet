@@ -92,7 +92,7 @@ function opItemHTML(id) {
       <span class="op-item__icon">${icon('op-operation')}</span>
       <div class="op-item__text"><div class="op-item__name">${o.name}</div><div class="op-item__sub">${o.type} · ${o.tool}</div></div>
       <span class="op-item__time">${o.time}</span>
-      <button class="op-item__play" title="Simulate">${icon('i-play')}</button>
+      <button class="op-item__play" title="Operation parameters">${icon('i-play')}</button>
     </div>
   </div>`;
 }
@@ -215,10 +215,6 @@ function selectOperation(opId) {
     r.classList.add('is-selected');
     r.closest('.setup-block')?.classList.remove('is-collapsed');
   });
-  // edit panel (flyout right of the list)
-  $('#editTitle').textContent = o.name;
-  $('#editBody').innerHTML = editBodyHTML(o);
-  $('#editpanel').classList.add('is-open');
   // details card
   $('#dcTitle').textContent = o.name;
   $('#dcBody').innerHTML = `
@@ -233,9 +229,26 @@ function selectOperation(opId) {
     $(`#tableBody tr[data-tool="${o.tool}"]`)?.classList.add('is-selected');
   }
   $$(`.op-item[data-op="${opId}"] .op-item__head`)[0]?.scrollIntoView({ block:'nearest' });
-  // tablet portrait: the drawer would cover the edit flyout — close it
-  if (matchMedia('(max-width:900px)').matches) closeDrawer();
 }
+
+/* edit overlay: opens from the ▶ trigger on an operation row, floats next to it */
+function openEdit(opId, anchorRect) {
+  const o = OPS[opId];
+  if (!o) return;
+  selectOperation(opId);
+  $('#editTitle').textContent = o.name;
+  $('#editBody').innerHTML = editBodyHTML(o);
+  const ep = $('#editpanel');
+  ep.classList.add('is-open');
+  const narrow = matchMedia('(max-width:900px)').matches;
+  if (narrow) closeDrawer(); // the drawer would cover the overlay
+  const lpRight = narrow ? 52 : $('#leftpanel').getBoundingClientRect().right;
+  const left = Math.max(60, Math.min(lpRight + 8, innerWidth - ep.offsetWidth - 12));
+  const top = Math.max(12, Math.min(anchorRect ? anchorRect.top : 80, innerHeight - ep.offsetHeight - 12));
+  ep.style.left = `${left}px`;
+  ep.style.top = `${top}px`;
+}
+function closeEdit() { $('#editpanel').classList.remove('is-open'); }
 
 /* ---------------------------------------------------------------- wiring */
 function delegateAccordions(root) {
@@ -245,7 +258,11 @@ function delegateAccordions(root) {
     const setupHead = e.target.closest('.setup-block__head');
     if (setupHead) { setupHead.parentElement.classList.toggle('is-collapsed'); return; }
     const play = e.target.closest('.op-item__play');
-    if (play) { e.stopPropagation(); return; }
+    if (play) {
+      e.stopPropagation();
+      openEdit(play.closest('.op-item').dataset.op, play.getBoundingClientRect());
+      return;
+    }
     const opHead = e.target.closest('.op-item__head');
     if (opHead) { selectOperation(opHead.parentElement.dataset.op); return; }
   });
@@ -260,9 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
   $$('.ltab').forEach((t) => t.addEventListener('click', () => {
     $$('.ltab').forEach((x) => x.classList.toggle('is-active', x === t));
     $$('.ltab-pane').forEach((p) => p.classList.toggle('is-active', p.id === `lp-${t.dataset.tab}`));
-    // the operation edit flyout is contextual to the Operations tab
-    if (t.dataset.tab !== 'operations') $('#editpanel').classList.remove('is-open');
-    else if ($('.op-item.is-selected')) $('#editpanel').classList.add('is-open');
+    closeEdit();
   }));
 
   // accordions + op items (event delegation on the whole left panel)
@@ -297,11 +312,15 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   divider.addEventListener('pointerup', () => { drag = null; });
 
-  // edit panel close
-  $('#editClose').addEventListener('click', () => {
-    $('#editpanel').classList.remove('is-open');
-    $$('.op-item.is-selected').forEach((r) => r.classList.remove('is-selected'));
+  // edit overlay close: X, click outside, Esc (selection stays)
+  $('#editClose').addEventListener('click', closeEdit);
+  document.addEventListener('pointerdown', (e) => {
+    if (!$('#editpanel').classList.contains('is-open')) return;
+    if (e.target.closest('#editpanel') || e.target.closest('.op-item__play')) return;
+    closeEdit();
   });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeEdit(); });
+  window.addEventListener('resize', closeEdit);
 
   // details close + timeline
   $('#dcClose').addEventListener('click', () => { $('#detailsCard').hidden = true; });
@@ -324,9 +343,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // default: keep Setup 1 open, collapse Setup 2, in both panes
   $$('.setup-block[data-setup="setup2"]').forEach((b) => b.classList.add('is-collapsed'));
   selectOperation('faceMill1');
-  // tablet: don't cover the navigator (≤1080) with the edit flyout on first load —
-  // show the list + 3D; the flyout opens on the first explicit tap
-  if (matchMedia('(max-width:1080px)').matches) $('#editpanel').classList.remove('is-open');
 });
 
 function closeDrawer() {

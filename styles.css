@@ -206,16 +206,19 @@ input { font-family:inherit; }
   background:#0b0d0e; aspect-ratio:16/10; position:relative; }
 .preview img { width:100%; height:100%; object-fit:cover; }
 
-/* ===================================================== OPERATION EDIT PANEL === */
-.editpanel { width:0; flex-shrink:0; overflow:hidden; background:var(--ec-card);
-  display:flex; flex-direction:column; min-height:0; transition:width .2s ease;
-  border-right:0 solid var(--divider); }
-.editpanel.is-open { width:366px; border-right-width:1px; }
+/* ============================================ OPERATION EDIT OVERLAY (popover) === */
+/* Opens from the ▶ trigger on an operation row; floats over the 3D, never
+   displaces the layout. Positioned by JS next to the clicked row. */
+.editpanel { position:fixed; z-index:60; width:366px; max-height:calc(100vh - 24px);
+  display:none; flex-direction:column; background:var(--ec-popover);
+  border:1px solid var(--border); border-radius:var(--ec-radius-lg);
+  box-shadow:0 16px 48px rgba(0,0,0,.55); overflow:hidden; }
+.editpanel.is-open { display:flex; }
 .editpanel__head { display:flex; align-items:flex-start; justify-content:space-between; gap:8px;
-  padding:12px 10px 10px 14px; border-bottom:1px solid var(--divider); min-width:366px; }
+  padding:12px 10px 10px 14px; border-bottom:1px solid var(--divider); }
 .editpanel__eyebrow { font-size:11px; color:var(--ec-fg-48); }
 .editpanel__title { font-size:15px; font-weight:600; color:var(--ec-fg-100); margin-top:2px; }
-.editpanel__body { flex:1; min-height:0; overflow-y:auto; padding:12px 14px 24px; min-width:366px; }
+.editpanel__body { flex:1; min-height:0; overflow-y:auto; padding:12px 14px 16px; }
 
 /* =============================================================== CENTER === */
 .center { flex:1; min-width:0; position:relative; display:flex; flex-direction:column; background:var(--ec-bg); }
@@ -336,18 +339,14 @@ input { font-family:inherit; }
 ::-webkit-scrollbar-thumb:hover { background:var(--ec-fg-24); background-clip:content-box; }
 
 /* ========================================================== RESPONSIVE === */
-/* Tablet landscape: navigator stays docked (narrower); the edit flyout slides
-   OVER the navigator (master-detail) so the 3D view is never covered. */
+/* Tablet landscape: navigator stays docked, just narrower. */
 @media (max-width:1080px) {
   :root { --left-w:320px; }
-  .editpanel { position:absolute; left:52px; top:0; bottom:0; z-index:48;
-    box-shadow:0 10px 40px rgba(0,0,0,.6); border-right-width:1px; }
-  .editpanel.is-open { width:320px; }
-  .editpanel__head, .editpanel__body { min-width:320px; }
 }
 /* Tablet portrait: navigator becomes a slide-over drawer with an explicit
-   toggle button; the edit flyout keeps overlaying the same left zone. */
+   toggle button; the edit overlay clamps to the viewport. */
 @media (max-width:900px) {
+  .editpanel { width:min(366px, calc(100vw - 72px)); }
   .leftpanel { position:absolute; left:52px; top:0; bottom:0; z-index:50; transform:translateX(calc(-100% - 60px));
     transition:transform .22s ease; box-shadow:0 10px 40px rgba(0,0,0,.6); }
   .leftpanel.is-open { transform:translateX(0); }
