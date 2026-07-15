@@ -77,8 +77,17 @@
   </symbol>
 </svg>
 
-<!-- Чистый холст: блоки добавляем по одному, по мере проектирования -->
-<div class="blank-note">Workspace v2 — пустой холст<br><small style="opacity:.6">токены ENCY Core, шрифты и иконки подключены</small></div>
+<!-- Каркас: header + левая панель на всю высоту + две панели справа 50/50 -->
+<div class="app">
+  <header class="header"></header>
+  <div class="main">
+    <aside class="panel panel--left"><div class="ghost">Left panel</div></aside>
+    <div class="rightcol">
+      <section class="panel"><div class="ghost">Top panel</div></section>
+      <section class="panel"><div class="ghost">Bottom panel</div></section>
+    </div>
+  </div>
+</div>
 
 <script src="app.js"></script>
 </body>
