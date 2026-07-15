@@ -18,7 +18,10 @@ createServer(async (req, res) => {
     const file = normalize(join(ROOT, p));
     if (!file.startsWith(ROOT)) { res.writeHead(403).end(); return; }
     const buf = await readFile(file);
-    res.writeHead(200, { 'content-type': TYPES[extname(file).toLowerCase()] || 'application/octet-stream' });
+    res.writeHead(200, {
+      'content-type': TYPES[extname(file).toLowerCase()] || 'application/octet-stream',
+      'cache-control': 'no-store',
+    });
     res.end(buf);
   } catch {
     res.writeHead(404).end('Not found');
