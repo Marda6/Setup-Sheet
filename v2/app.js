@@ -156,6 +156,22 @@ function selectOperation(opId) {
    and Tool table views — each brings its own stat model */
 function renderStatsMenu(view) {
   const menu = $('#statsMenu');
+  if (view === 'viewer') {
+    // 3D viewer: scene-element visibility, same popover format;
+    // groups are separated by plain dividers (no extra headings)
+    menu.innerHTML = `
+      <div class="statsmenu__label">Visibility</div>
+      ${VIEWER_LAYER_GROUPS.map((group) => group.map((l) => `
+      <button class="statsmenu__preset${viewer.show[l.key] ? ' is-active' : ''}" data-vlayer="${l.key}">${icon(l.icon)}${l.label}</button>`).join('')).join('<div class="statsmenu__sep"></div>')}
+      <div class="statsmenu__hint">Pick which elements are visible in the scene.</div>`;
+    $$('#statsMenu [data-vlayer]').forEach((b) => b.addEventListener('click', () => {
+      const k = b.dataset.vlayer;
+      viewer.show[k] = !viewer.show[k];
+      renderStatsMenu(view);
+      drawViewer();
+    }));
+    return;
+  }
   const isTools = view === 'tools';
   const STATS = isTools ? TOOL_STATS : OP_STATS;
   const PRESETS = isTools ? TOOL_PRESETS : OP_PRESETS;
@@ -239,25 +255,28 @@ function renderOverview() {
 /* two representations: a data table and Tool & Assembly blocks with a 2D/3D preview */
 let toolsMode = 'table';
 let selectedTool = null;
+let toolsPreviewPos = 'right';   // shared preview pane: 'off' | 'right' | 'bottom'
 const toolPreviewMode = {};      // tno → '2d' | '3d' (default 2d)
-const toolOpen = { T10: true };  // which assembly blocks are expanded
 
 const toolTime = (name) =>
   fmtTime(Object.values(OPS).filter((o) => o.tool === name).reduce((a, o) => a + parseTime(o.time), 0));
-const num = (n) => String(+n.toFixed(1)); // 40 → "40", 0.4 → "0.4"
+/* up to 3 decimals, trailing zeros trimmed: 40 → "40", 3.175 → "3.175" */
+const num = (n) => String(+n.toFixed(3));
 
 /* one stat model drives both representations: the spec grid on the assembly
    blocks and columns of the table */
+/* order = table column order; cards regroup these into geometry (bright) and
+   machine offsets (quiet), with time pulled out to the card header */
 const TOOL_STATS = [
-  { key:'dia',  label:'⌀',    val:(t) => t.dia.toFixed(2),        cell:(t) => `${t.dia.toFixed(2)} mm` },
-  { key:'oal',  label:'OAL',  val:(t) => t.oal.toFixed(1),        cell:(t) => `${t.oal.toFixed(1)} mm` },
-  { key:'loc',  label:'LOC',  val:(t) => t.fluteLen.toFixed(1),   cell:(t) => `${t.fluteLen.toFixed(1)} mm` },
-  { key:'z',    label:'Z',    val:(t) => t.flutes,                cell:(t) => t.flutes },
-  { key:'time', label:'Time', val:(t) => toolTime(t.name),        cell:(t) => toolTime(t.name) },
-  { key:'h',    label:'H',    val:(t) => num(t.oal),              cell:(t) => `${t.oal.toFixed(1)} mm` },
-  { key:'rc',   label:'Rc',   val:(t) => (t.dia / 2).toFixed(2),  cell:(t) => `${(t.dia / 2).toFixed(2)} mm` },
-  { key:'hreg', label:'H#',   val:(t) => t.hreg ?? '—',           cell:(t) => t.hreg ?? '—' },
-  { key:'dreg', label:'D#',   val:(t) => t.dreg ?? '—',           cell:(t) => t.dreg ?? '—' },
+  { key:'dia',  label:'⌀',    group:'geo',  val:(t) => num(t.dia),      cell:(t) => `${num(t.dia)} mm` },
+  { key:'oal',  label:'OAL',  group:'geo',  val:(t) => num(t.oal),      cell:(t) => `${num(t.oal)} mm` },
+  { key:'loc',  label:'LOC',  group:'geo',  val:(t) => num(t.fluteLen), cell:(t) => `${num(t.fluteLen)} mm` },
+  { key:'z',    label:'Z',    group:'geo',  val:(t) => t.flutes,        cell:(t) => t.flutes },
+  { key:'rc',   label:'Rc',   group:'geo',  val:(t) => num(t.dia / 2),  cell:(t) => `${num(t.dia / 2)} mm` },
+  { key:'h',    label:'H',    group:'mach', val:(t) => num(t.oal),      cell:(t) => `${num(t.oal)} mm` },
+  { key:'hreg', label:'H#',   group:'mach', val:(t) => t.hreg ?? '—',   cell:(t) => t.hreg ?? '—' },
+  { key:'dreg', label:'D#',   group:'mach', val:(t) => t.dreg ?? '—',   cell:(t) => t.dreg ?? '—' },
+  { key:'time', label:'Time', group:'time', val:(t) => toolTime(t.name), cell:(t) => toolTime(t.name) },
 ];
 const TOOL_PRESETS = [
   { id:'presetting', label:'Tool presetting', hint:'on the machine', icon:'i-bolt',    stats:['dia','oal','z','h'] },
@@ -349,37 +368,54 @@ function tool3D(t) {
 
 const toolSVG = (t, mode) => (mode === '3d' ? tool3D(t) : tool2D(t));
 const toolCapHTML = (t) => `<div class="tool__cap">
-  <b>H ${num(t.oal)} · Rc ${(t.dia / 2).toFixed(2)}</b>
+  <b>H ${num(t.oal)} · Rc ${num(t.dia / 2)}</b>
   <span>${t.tno} · Z${t.flutes} · ${t.kind}</span></div>`;
 
+/* card = a small spec sheet: divided header (chip + name + time), then
+   definition columns — geometry stacked 3 per column with values on one
+   axis, machine offsets in their own column behind a hairline */
 function toolBlockHTML(t) {
-  const mode = toolPreviewMode[t.tno] || '2d';
-  const open = !!toolOpen[t.tno];
   const sel = t.tno === selectedTool ? ' is-selected' : '';
-  const specs = TOOL_STATS.filter((s) => toolStatsSet.has(s.key))
-    .map((s) => `<span class="tspec"><i>${s.label}</i>${s.val(t)}</span>`).join('');
+  const pairs = (group) => TOOL_STATS
+    .filter((s) => s.group === group && toolStatsSet.has(s.key))
+    .map((s) => `<span class="tspec"><i>${s.label}</i>${s.val(t)}</span>`);
+  const geo = pairs('geo'), mach = pairs('mach');
+  const cols = [];
+  for (let i = 0; i < geo.length; i += 3) cols.push(`<div class="tool__col">${geo.slice(i, i + 3).join('')}</div>`);
+  if (mach.length) cols.push(`<div class="tool__col tool__col--quiet">${mach.join('')}</div>`);
   return `
-  <div class="tool${open ? '' : ' is-collapsed'}${sel}" data-tool="${t.tno}">
-    <div class="tool__head">
-      <div class="tool__idcol">${icon('i-toolbit')}<span>${t.tno}</span></div>
-      <div class="tool__text">
-        <div class="tool__line1"><span class="tool__name" title="${t.name}">${t.name}</span><span class="tool__kind">${t.kind}</span></div>
-        ${specs ? `<div class="tool__specs">${specs}</div>` : ''}
-      </div>
-      <span class="tool__chev">${icon('i-chevdown')}</span>
-    </div>
-    <div class="tool__body">
+  <div class="tool${sel}" data-tool="${t.tno}">
+    <div class="tool__line1"><span class="tag-tno">${t.tno}</span><span class="tool__name" title="${t.name}">${t.name}</span><span class="tool__kind">${t.kind}</span>${
+      toolStatsSet.has('time') ? `<span class="tool__time">${toolTime(t.name)}</span>` : ''}</div>
+    ${cols.length ? `<div class="tool__body">${cols.join('')}</div>` : ''}
+  </div>`;
+}
+
+/* shared preview pane: one per tools panel, follows the selection;
+   the info block is a column on the right layout, a side column on the bottom one */
+function toolSideInner(t) {
+  const mode = toolPreviewMode[t.tno] || '2d';
+  return `
+    <div class="toolside__info">
+      <div class="toolside__name">${t.name}</div>
       <div class="tool__modes">
         <div class="seg">
           <button class="${mode === '2d' ? 'is-active' : ''}" data-pmode="2d">2D</button>
           <button class="${mode === '3d' ? 'is-active' : ''}" data-pmode="3d">3D</button>
         </div>
         <button class="tool__holder" disabled title="No holder assigned">Holder</button>
+        <span class="panel__hspacer"></span>
         <button class="tool__expand" title="Expand preview">${icon('i-expand')}</button>
       </div>
-      <div class="tool__preview">${toolSVG(t, mode)}${toolCapHTML(t)}</div>
     </div>
-  </div>`;
+    <div class="tool__preview">${toolSVG(t, mode)}${toolCapHTML(t)}</div>`;
+}
+
+/* the head button cycles the pane: right → bottom → off */
+function pvSync(btn) {
+  btn.classList.toggle('is-active', toolsPreviewPos !== 'off');
+  $('use', btn).setAttribute('href', toolsPreviewPos === 'bottom' ? '#i-panel-bottom' : '#i-panel-right');
+  btn.title = `Tool preview: ${toolsPreviewPos}`;
 }
 
 function openToolZoom(tno) {
@@ -391,12 +427,14 @@ function openToolZoom(tno) {
   document.body.appendChild(el);
 }
 
-function renderTools() {
-  if (toolsMode === 'cards') {
-    return `<div class="toolsx">${TOOLS.map(toolBlockHTML).join('')}</div>`;
-  }
+/* the preview pane needs ~248px: below this body width it hides itself */
+const TOOLS_SIDE_MIN = 520;
+function renderTools(panel) {
+  if (toolsPreviewPos !== 'off' && !selectedTool) selectedTool = TOOLS[0].tno;
   const cols = TOOL_STATS.filter((s) => toolStatsSet.has(s.key));
-  return `<table class="dtable">
+  const list = toolsMode === 'cards'
+    ? `<div class="toolsx">${TOOLS.map(toolBlockHTML).join('')}</div>`
+    : `<table class="dtable">
     <thead><tr><th>T#</th><th>Name</th>${cols.map((c) => `<th>${c.label}</th>`).join('')}</tr></thead>
     <tbody>
       ${TOOLS.map((t) => `
@@ -407,16 +445,26 @@ function renderTools() {
       </tr>`).join('')}
     </tbody>
   </table>`;
+  const t = TOOLS.find((x) => x.tno === selectedTool) || TOOLS[0];
+  const tight = panel && $('.panel__body', panel).clientWidth < TOOLS_SIDE_MIN;
+  const side = toolsPreviewPos !== 'off' ? `<aside class="toolside" data-tool="${t.tno}">${toolSideInner(t)}</aside>` : '';
+  const mods = (tight ? ' toolswrap--tight' : '') + (toolsPreviewPos === 'bottom' ? ' toolswrap--bottom' : '');
+  return `<div class="toolswrap${mods}"><div class="toolslist">${list}</div>${side}</div>`;
 }
 
 function refreshTools() {
   const panel = $$('.panel').find((p) => p.dataset.view === 'tools');
-  if (panel) $('.panel__body', panel).innerHTML = renderTools();
+  if (panel) $('.panel__body', panel).innerHTML = renderTools(panel);
 }
 
 function selectTool(tno) {
   selectedTool = tno;
   $$('[data-tool]').forEach((el) => el.classList.toggle('is-selected', el.dataset.tool === tno));
+  const side = $('.toolside');
+  if (side && side.dataset.tool !== tno) {
+    side.dataset.tool = tno;
+    side.innerHTML = toolSideInner(TOOLS.find((x) => x.tno === tno));
+  }
 }
 
 /* ----------------------------------------------------------- view: Setup */
@@ -434,6 +482,306 @@ function renderSetupView() {
     </div>`).join('')}</div>`;
 }
 
+/* ------------------------------------------------------ view: 3D Viewer */
+/* static render + view toolbar (layer toggles) + a simulation timeline;
+   playback walks the operations in program order and highlights the current
+   one in the Operations tree */
+const OP_ORDER = (() => {
+  let t = 0; const arr = [];
+  SETUPS.forEach((s) => s.parts.forEach((p) => p.ops.forEach((id) => {
+    const d = parseTime(OPS[id].time);
+    arr.push({ id, start: t, end: t + d }); t += d;
+  })));
+  return arr;
+})();
+const VIEWER_TOTAL = OP_ORDER.length ? OP_ORDER[OP_ORDER.length - 1].end : 0;
+const VIEWER_SPEED = 60; // simulated seconds per real second
+
+const viewer = { t: 0, playing: false, last: 0, lastOp: null, dims: false, measure: false,
+  show: { part: true, stock: true, fixture: true, context: false, machine: false,
+          tool: true, holder: true, path: true, normals: false, points: false, axes: true } };
+
+/* the full set of display settings (the demo scene only reacts to a few of
+   them — the real app has its own engine, this popover documents the options).
+   Grouped by meaning: scene geometry / tooling / toolpath data / helpers. */
+const VIEWER_LAYER_GROUPS = [
+  [
+    { key:'part',    label:'Part',          icon:'i-part'    },
+    { key:'stock',   label:'Stock',         icon:'i-box'     },
+    { key:'fixture', label:'Fixture',       icon:'i-layers'  },
+    { key:'context', label:'Setup context', icon:'i-context' },
+    { key:'machine', label:'Full machine',  icon:'i-machine' },
+  ],
+  [
+    { key:'tool',    label:'Tool',          icon:'i-toolbit' },
+    { key:'holder',  label:'Holder',        icon:'i-holder'  },
+  ],
+  [
+    { key:'path',    label:'Toolpath',      icon:'i-mesh'    },
+    { key:'normals', label:'Normals',       icon:'i-normals' },
+    { key:'points',  label:'Points',        icon:'i-points'  },
+  ],
+  [
+    { key:'axes',    label:'Axes',          icon:'i-axes'    },
+  ],
+];
+
+/* --- tiny software 3D renderer (project rule: no dependencies) ---------- */
+/* flat-shaded painter's algorithm on canvas; enough for a demo part the
+   user can orbit (drag) and zoom (wheel) */
+const VIEWER_CAM_HOME = { yaw: -0.7, pitch: 0.6, zoom: 1.2, dist: 900 };
+viewer.cam = { ...VIEWER_CAM_HOME };
+
+function faceNormal(pts) {
+  const [a, b, c] = pts;
+  const u = [b[0]-a[0], b[1]-a[1], b[2]-a[2]], v = [c[0]-b[0], c[1]-b[1], c[2]-b[2]];
+  const n = [u[1]*v[2]-u[2]*v[1], u[2]*v[0]-u[0]*v[2], u[0]*v[1]-u[1]*v[0]];
+  const l = Math.hypot(...n) || 1;
+  return n.map((x) => x / l);
+}
+/* sub > 1 slices the top face into strips: the painter's sort breaks when a
+   small mesh stands on one huge coplanar face (it sinks into it) */
+function boxMesh(cx, cyy, z0, z1, w, d, rgb, tag, sub = 1) {
+  const x0 = cx-w/2, x1 = cx+w/2, y0 = cyy-d/2, y1 = cyy+d/2;
+  const v = [[x0,y0,z0],[x1,y0,z0],[x1,y1,z0],[x0,y1,z0],[x0,y0,z1],[x1,y0,z1],[x1,y1,z1],[x0,y1,z1]];
+  const idx = [[0,3,2,1],[0,1,5,4],[1,2,6,5],[2,3,7,6],[3,0,4,7]];
+  const faces = idx.map((f) => { const pts = f.map((i) => v[i]); return { pts, n: faceNormal(pts), edge: true }; });
+  for (let i = 0; i < sub; i++) {
+    const xa = x0 + (w * i) / sub, xb = x0 + (w * (i + 1)) / sub;
+    faces.push({ pts: [[xa,y0,z1],[xb,y0,z1],[xb,y1,z1],[xa,y1,z1]], n: [0,0,1], edge: sub === 1 });
+  }
+  return { tag, rgb, faces };
+}
+function cylMesh(cx, cyy, z0, z1, r, n, rgb, tag) {
+  const bot = [], top = [], faces = [];
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2;
+    bot.push([cx + r*Math.cos(a), cyy + r*Math.sin(a), z0]);
+    top.push([cx + r*Math.cos(a), cyy + r*Math.sin(a), z1]);
+  }
+  for (let i = 0; i < n; i++) {
+    const j = (i + 1) % n;
+    const pts = [bot[i], bot[j], top[j], top[i]];
+    faces.push({ pts, n: faceNormal(pts), edge: false });
+  }
+  faces.push({ pts: top, n: [0,0,1], edge: true });
+  faces.push({ pts: [...bot].reverse(), n: [0,0,-1], edge: true });
+  return { tag, rgb, faces };
+}
+function diskMesh(cx, cyy, z, r, n, rgb, tag) {
+  const pts = [];
+  for (let i = 0; i < n; i++) { const a = (i / n) * Math.PI * 2; pts.push([cx + r*Math.cos(a), cyy + r*Math.sin(a), z]); }
+  return { tag, rgb, faces: [{ pts, n: [0,0,1], edge: false }] };
+}
+
+/* demo scene: milled part (base + step block + boss) on a fixture plate */
+const AL = [168,178,183], VIO = [122,112,192], HOLE = [15,17,19];
+const VIEWER_SCENE = [
+  boxMesh(0, 0, -6, 0, 150, 60, VIO, 'fixture', 6),
+  boxMesh(0, 0, 0, 8, 112, 28, AL, 'part', 8),
+  boxMesh(-38, 0, 8, 23, 36, 28, AL, 'part'),
+  cylMesh(28, 0, 8, 20, 10, 20, AL, 'part'),
+  diskMesh(28, 0, 20.05, 4.75, 20, HOLE, 'part'),   // M10 in the boss
+  diskMesh(2, 0, 8.05, 4, 16, HOLE, 'part'),        // 3× ⌀8
+  diskMesh(48, 7, 8.05, 4, 16, HOLE, 'part'),
+  diskMesh(48, -7, 8.05, 4, 16, HOLE, 'part'),
+];
+
+function drawViewer() {
+  const c = $('.viewer__canvas'); if (!c) return;
+  const r = c.getBoundingClientRect(); if (!r.width || !r.height) return;
+  const dpr = window.devicePixelRatio || 1;
+  const W = Math.round(r.width), H = Math.round(r.height);
+  if (c.width !== W*dpr || c.height !== H*dpr) { c.width = W*dpr; c.height = H*dpr; }
+  const ctx = c.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+
+  const { yaw, pitch, zoom, dist } = viewer.cam;
+  const cy_ = Math.cos(yaw), sy_ = Math.sin(yaw), cp = Math.cos(pitch), sp = Math.sin(pitch);
+  const S = (Math.min(W, H) / 250) * zoom;
+  const proj = (p) => {
+    const x1 = p[0]*cy_ - p[1]*sy_, y1 = p[0]*sy_ + p[1]*cy_, z1 = p[2];
+    const d = y1*cp + z1*sp;                       // toward the camera
+    const u = z1*cp - y1*sp;                       // screen up
+    const k = S * dist / (dist - d);
+    return { x: W/2 + x1*k, y: H*0.54 - u*k, d };
+  };
+  const line = (a, b, color, wd = 1, dash = null) => {
+    const A = proj(a), B = proj(b);
+    ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(B.x, B.y);
+    ctx.strokeStyle = color; ctx.lineWidth = wd;
+    ctx.setLineDash(dash || []); ctx.stroke(); ctx.setLineDash([]);
+  };
+
+  // floor grid under the fixture
+  ctx.strokeStyle = 'rgba(245,245,245,.05)'; ctx.lineWidth = 1;
+  for (let g = -100; g <= 100; g += 25) {
+    line([g, -100, -6], [g, 100, -6], 'rgba(245,245,245,.05)');
+    line([-100, g, -6], [100, g, -6], 'rgba(245,245,245,.05)');
+  }
+
+  // meshes → visible faces, far-to-near
+  const faces = [];
+  for (const m of VIEWER_SCENE) {
+    if (m.tag && viewer.show[m.tag] === false) continue;
+    for (const f of m.faces) {
+      const P = f.pts.map(proj);
+      let area = 0;
+      for (let i = 0; i < P.length; i++) { const a = P[i], b = P[(i+1)%P.length]; area += a.x*b.y - b.x*a.y; }
+      if (area <= 0) continue;                     // backface (front = positive with y-down)
+      const nx1 = f.n[0]*cy_ - f.n[1]*sy_, ny1 = f.n[0]*sy_ + f.n[1]*cy_;
+      const nd = ny1*cp + f.n[2]*sp, nu = f.n[2]*cp - ny1*sp;
+      const b = 0.42 + 0.58 * Math.max(0, -0.35*nx1 + 0.5*nu + 0.78*nd);
+      faces.push({ P, d: P.reduce((s, p) => s + p.d, 0) / P.length, rgb: m.rgb, b, edge: f.edge });
+    }
+  }
+  faces.sort((a, b) => a.d - b.d);
+  for (const f of faces) {
+    ctx.beginPath();
+    f.P.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
+    ctx.closePath();
+    ctx.fillStyle = `rgb(${f.rgb.map((v) => Math.round(v * f.b)).join(',')})`;
+    ctx.fill();
+    if (f.edge) { ctx.strokeStyle = 'rgba(8,10,11,.45)'; ctx.lineWidth = .75; ctx.stroke(); }
+  }
+
+  // stock: dashed wireframe box around the part
+  if (viewer.show.stock) {
+    const sx = 58, sy = 16, sz = 26, col = 'rgba(245,245,245,.3)', dash = [4, 3];
+    for (const z of [0, sz]) {
+      line([-sx,-sy,z],[sx,-sy,z],col,1,dash); line([sx,-sy,z],[sx,sy,z],col,1,dash);
+      line([sx,sy,z],[-sx,sy,z],col,1,dash);   line([-sx,sy,z],[-sx,-sy,z],col,1,dash);
+    }
+    for (const [x, y] of [[-sx,-sy],[sx,-sy],[sx,sy],[-sx,sy]]) line([x,y,0],[x,y,sz],col,1,dash);
+  }
+
+  // toolpath: serpentine over the step block
+  if (viewer.show.path) {
+    const pts = [[-52, -10, 36], [-52, -10, 24.5]];
+    for (let i = 0, y = -10; y <= 10; y += 5, i++) {
+      pts.push([i % 2 ? -52 : -24, y, 24.5]);
+      if (y + 5 <= 10) pts.push([i % 2 ? -52 : -24, y + 5, 24.5]);
+    }
+    ctx.beginPath();
+    pts.forEach((p, i) => { const q = proj(p); i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y); });
+    ctx.strokeStyle = 'rgba(70,172,255,.9)'; ctx.lineWidth = 1.2; ctx.stroke();
+  }
+
+  // part-zero axes triad (token colors: coral / green / blue)
+  if (viewer.show.axes) {
+    const O = [-60, -18, 0], L = 30;
+    const ax = [[[O[0]+L, O[1], O[2]], '#ff7072', 'X'], [[O[0], O[1]+L, O[2]], '#84ebb8', 'Y'], [[O[0], O[1], O[2]+L], '#46acff', 'Z']];
+    ctx.font = '9px Inter, sans-serif';
+    for (const [end, col, lbl] of ax) {
+      line(O, end, col, 1.2);
+      const p = proj(end);
+      ctx.fillStyle = col; ctx.fillText(lbl, p.x + 3, p.y - 3);
+    }
+  }
+
+  // the UI inside the view adapts to the panel: no scrolling, ever —
+  // super-short panels drop the top bars, narrow ones collapse the filters
+  const host = c.closest('.viewer');
+  host.classList.toggle('viewer--slim', H < 120);
+  viewerFiltersSync(host);
+}
+
+/* the filters bar sits right of the measure bar; when the panel is too
+   narrow for all toggles it collapses into one button with the popover */
+const VIEWER_FILTERS_MIN = 330;
+function viewerFiltersHTML() {
+  if (viewer.filtersCompact) {
+    return `<button data-vact="filters" title="Display filters">${icon('i-eye')}</button>`;
+  }
+  return VIEWER_LAYER_GROUPS.map((g) => g.map((l) =>
+    `<button data-vshow="${l.key}" class="${viewer.show[l.key] ? 'is-on' : ''}" title="${l.label}">${icon(l.icon)}</button>`)
+    .join('')).join('<span class="viewer__sep"></span>');
+}
+function viewerFiltersSync(v) {
+  const top = $('.viewer__top', v), bar = $('.viewer__bar', v), f = $('.viewer__filters', v);
+  if (!top || !f) return;
+  const compact = top.clientWidth - bar.offsetWidth - 8 < VIEWER_FILTERS_MIN;
+  if (compact !== viewer.filtersCompact) {
+    viewer.filtersCompact = compact;
+    f.innerHTML = viewerFiltersHTML();
+  }
+}
+
+function renderViewer() {
+  requestAnimationFrame(drawViewer); // paint once the markup is in the DOM
+  const pct = VIEWER_TOTAL ? (viewer.t / VIEWER_TOTAL) * 100 : 0;
+  return `
+  <div class="viewer${viewer.playing ? ' is-playing' : ''}">
+    <canvas class="viewer__canvas"></canvas>
+    <div class="viewer__top">
+      <div class="viewer__bar">
+        <button data-vact="fit" title="Fit view">${icon('i-target')}</button>
+        <button data-vact="dims" class="${viewer.dims ? 'is-active' : ''}" title="Dimensions">${icon('i-ruler')}</button>
+        <button data-vact="measure" class="${viewer.measure ? 'is-active' : ''}" title="Measure">${icon('i-measure')}</button>
+      </div>
+      <div class="viewer__filters">${viewerFiltersHTML()}</div>
+    </div>
+    <div class="viewer__timeline">
+      <button data-vact="prev" title="Previous operation">${icon('i-skip-back')}</button>
+      <button data-vact="play" class="viewer__play" title="Play simulation"><svg class="ic-play"><use href="#i-play"/></svg><svg class="ic-pause"><use href="#i-pause"/></svg></button>
+      <button data-vact="next" title="Next operation">${icon('i-skip-fwd')}</button>
+      <div class="viewer__track">
+        <div class="viewer__rail"></div>
+        <div class="viewer__fill" style="width:${pct}%"></div>
+        <div class="viewer__thumb" style="left:${pct}%"></div>
+      </div>
+      <span class="viewer__time">${fmtTime(Math.round(viewer.t))} / ${fmtTime(VIEWER_TOTAL)}</span>
+    </div>
+  </div>`;
+}
+
+function viewerSync() {
+  const v = $('.viewer'); if (!v) return;
+  const pct = VIEWER_TOTAL ? (viewer.t / VIEWER_TOTAL) * 100 : 0;
+  $('.viewer__fill', v).style.width = `${pct}%`;
+  $('.viewer__thumb', v).style.left = `${pct}%`;
+  $('.viewer__time', v).textContent = `${fmtTime(Math.round(viewer.t))} / ${fmtTime(VIEWER_TOTAL)}`;
+  v.classList.toggle('is-playing', viewer.playing);
+  const cur = OP_ORDER.find((o) => viewer.t >= o.start && viewer.t < o.end)
+    ?? OP_ORDER[OP_ORDER.length - 1];
+  if (cur && cur.id !== viewer.lastOp) { viewer.lastOp = cur.id; selectOperation(cur.id); }
+}
+
+function viewerTick(ts) {
+  if (!viewer.playing) return;
+  if (!$('.viewer')) { viewer.playing = false; viewer.last = 0; return; } // view hidden — pause
+  const dt = viewer.last ? (ts - viewer.last) / 1000 : 0;
+  viewer.last = ts;
+  viewer.t = Math.min(VIEWER_TOTAL, viewer.t + dt * VIEWER_SPEED);
+  if (viewer.t >= VIEWER_TOTAL) { viewer.playing = false; viewer.last = 0; }
+  viewerSync();
+  if (viewer.playing) requestAnimationFrame(viewerTick);
+}
+
+function viewerPlayPause() {
+  if (viewer.playing) { viewer.playing = false; viewer.last = 0; viewerSync(); return; }
+  if (viewer.t >= VIEWER_TOTAL) viewer.t = 0;
+  if (viewer.t === 0) viewer.lastOp = null; // re-highlight from the first operation
+  viewer.playing = true; viewer.last = 0;
+  viewerSync();
+  requestAnimationFrame(viewerTick);
+}
+
+function viewerSeek(sec) {
+  viewer.t = Math.max(0, Math.min(VIEWER_TOTAL, sec));
+  viewer.lastOp = null; // resync the highlighted operation
+  viewerSync();
+}
+
+/* prev goes to the start of the current operation first (audio-player style) */
+function viewerStep(dir) {
+  const found = OP_ORDER.findIndex((o) => viewer.t >= o.start && viewer.t < o.end);
+  const i = found === -1 ? OP_ORDER.length - 1 : found;
+  if (dir > 0) viewerSeek(i + 1 < OP_ORDER.length ? OP_ORDER[i + 1].start : VIEWER_TOTAL);
+  else viewerSeek(viewer.t - OP_ORDER[i].start > 2 ? OP_ORDER[i].start : (OP_ORDER[i - 1]?.start ?? 0));
+}
+
 /* ------------------------------------------------ panel views (combobox) */
 const VIEWS = [
   { id: 'overview',   label: 'Overview',   icon: 'i-grid-view' },
@@ -444,7 +792,7 @@ const VIEWS = [
 ];
 const viewById = (id) => VIEWS.find((v) => v.id === id);
 
-const VIEW_RENDERERS = { operations: renderOperations, overview: renderOverview, tools: renderTools, setup: renderSetupView };
+const VIEW_RENDERERS = { operations: renderOperations, overview: renderOverview, tools: renderTools, setup: renderSetupView, viewer: renderViewer };
 
 function setPanelView(panel, viewId) {
   const v = viewById(viewId);
@@ -455,11 +803,16 @@ function setPanelView(panel, viewId) {
   const vlabel = $('.panel__vlabel', panel);
   if (vlabel) vlabel.textContent = v.label;
   const settings = $('.panel__settings', panel);
-  if (settings) settings.hidden = viewId !== 'operations' && viewId !== 'tools';
+  if (settings) settings.hidden = !['operations', 'tools'].includes(viewId);
   const mode = $('.panel__mode', panel);
   if (mode) {
     mode.hidden = viewId !== 'tools';
     $$('button', mode).forEach((b) => b.classList.toggle('is-active', b.dataset.tmode === toolsMode));
+  }
+  const pv = $('.panel__pv', panel);
+  if (pv) {
+    pv.hidden = viewId !== 'tools';
+    pvSync(pv);
   }
   const render = VIEW_RENDERERS[viewId];
   $('.panel__body', panel).innerHTML = render ? render(panel) : `<div class="ghost">${v.label}</div>`;
@@ -497,7 +850,13 @@ function initPanelHead(panel) {
       <button data-tmode="table" title="Table view"><svg><use href="#i-rows"/></svg></button>
       <button data-tmode="cards" title="Card view"><svg><use href="#i-grid-view"/></svg></button>
     </div>
+    <button class="panel__pv" title="Tool preview" hidden>${icon('i-panel-right')}</button>
     <button class="panel__settings" title="List display options" hidden>${icon('i-sliders')}</button>`;
+  $('.panel__pv', panel).addEventListener('click', (e) => {
+    toolsPreviewPos = toolsPreviewPos === 'right' ? 'bottom' : toolsPreviewPos === 'bottom' ? 'off' : 'right';
+    pvSync(e.currentTarget);
+    refreshTools();
+  });
   $$('.panel__mode button', panel).forEach((b) => b.addEventListener('click', () => {
     if (toolsMode === b.dataset.tmode) return;
     toolsMode = b.dataset.tmode;
@@ -511,10 +870,13 @@ function initPanelHead(panel) {
     $$('.panel__menu').forEach((m) => { m.hidden = true; });
     if (open) {
       renderStatsMenu(panel.dataset.view);
-      menu.hidden = false;
+      menu.hidden = false; // show first so its height is measurable
       const r = e.currentTarget.getBoundingClientRect();
+      const mh = menu.offsetHeight;
+      // opens downward; flips up when it would run past the viewport
+      const top = r.bottom + 4 + mh > innerHeight ? r.top - 4 - mh : r.bottom + 4;
       menu.style.left = `${Math.max(8, Math.min(r.left, innerWidth - menu.offsetWidth - 8))}px`;
-      menu.style.top = `${r.bottom + 4}px`;
+      menu.style.top = `${Math.max(8, top)}px`;
     } else menu.hidden = true;
   });
   $('.panel__collapse', panel).addEventListener('click', () => togglePanel(panel));
@@ -533,26 +895,64 @@ function initPanelHead(panel) {
       return;
     }
     const orow = e.target.closest('.op-row');
-    if (orow) { selectOperation(orow.dataset.op); return; }
-    // tool table / assembly blocks
+    if (orow) {
+      selectOperation(orow.dataset.op);
+      // picking an operation moves the simulation playhead to its start
+      const o = OP_ORDER.find((x) => x.id === orow.dataset.op);
+      if (o && $('.viewer')) { viewer.t = o.start; viewer.lastOp = orow.dataset.op; viewerSync(); }
+      return;
+    }
+    // 3D viewer: scene-element toggles on the filters bar
+    const vsh = e.target.closest('[data-vshow]');
+    if (vsh) {
+      const k = vsh.dataset.vshow;
+      viewer.show[k] = !viewer.show[k];
+      vsh.classList.toggle('is-on', viewer.show[k]);
+      drawViewer();
+      return;
+    }
+    // 3D viewer: transport + tool modes
+    const vact = e.target.closest('[data-vact]');
+    if (vact) {
+      const a = vact.dataset.vact;
+      if (a === 'play') viewerPlayPause();
+      else if (a === 'prev') viewerStep(-1);
+      else if (a === 'next') viewerStep(1);
+      else if (a === 'fit') { viewer.cam = { ...VIEWER_CAM_HOME }; drawViewer(); }
+      else if (a === 'dims' || a === 'measure') {
+        const k = a === 'dims' ? 'dims' : 'measure';
+        viewer[k] = !viewer[k];
+        vact.classList.toggle('is-active', viewer[k]);
+      } else if (a === 'filters') {
+        // collapsed filters: the same visibility popover, anchored to the button
+        e.stopPropagation();
+        const menu = $('#statsMenu');
+        const open = menu.hidden;
+        $$('.panel__menu').forEach((m) => { m.hidden = true; });
+        if (open) {
+          renderStatsMenu('viewer');
+          menu.hidden = false;
+          const r = vact.getBoundingClientRect();
+          const mh = menu.offsetHeight;
+          const top = r.bottom + 4 + mh > innerHeight ? r.top - 4 - mh : r.bottom + 4;
+          menu.style.left = `${Math.max(8, Math.min(r.left, innerWidth - menu.offsetWidth - 8))}px`;
+          menu.style.top = `${Math.max(8, top)}px`;
+        } else menu.hidden = true;
+      }
+      return;
+    }
+    // tool table / cards / shared preview pane
     const pmode = e.target.closest('[data-pmode]');
     if (pmode) {
-      toolPreviewMode[pmode.closest('.tool').dataset.tool] = pmode.dataset.pmode;
-      refreshTools();
+      const host = pmode.closest('[data-tool]');
+      toolPreviewMode[host.dataset.tool] = pmode.dataset.pmode;
+      host.innerHTML = toolSideInner(TOOLS.find((x) => x.tno === host.dataset.tool));
       return;
     }
     const exp = e.target.closest('.tool__expand');
-    if (exp) { openToolZoom(exp.closest('.tool').dataset.tool); return; }
-    const thead = e.target.closest('.tool__head');
-    if (thead) {
-      const block = thead.closest('.tool'), tno = block.dataset.tool;
-      toolOpen[tno] = !toolOpen[tno];
-      block.classList.toggle('is-collapsed', !toolOpen[tno]);
-      selectTool(tno);
-      return;
-    }
+    if (exp) { openToolZoom(exp.closest('[data-tool]').dataset.tool); return; }
     const trow = e.target.closest('[data-tool]');
-    if (trow) selectTool(trow.dataset.tool);
+    if (trow && !trow.classList.contains('toolside')) selectTool(trow.dataset.tool);
   });
   const menu = $('.panel__menu', panel);
   $('.panel__switch', panel).addEventListener('click', (e) => {
@@ -607,7 +1007,9 @@ function makeDraggable(divider, onDrag) {
   divider.addEventListener('pointercancel', end);
 }
 
-const MIN_W = 260;  // shared: left panel and right column can't go narrower
+/* fits the worst case: tool card, Everything preset, 3-decimal values
+   (2 geometry columns + machine column) plus the scrollbar */
+const MIN_W = 340;  // shared: left panel and right column can't go narrower
 const MIN_H = 100;  // top/bottom panels can't go shorter
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -617,14 +1019,63 @@ document.addEventListener('DOMContentLoaded', () => {
     $('#moreMenu').hidden = true;
     $('#membersPanel').hidden = true;
     $('#statsMenu').hidden = true;
+    $('#datePanel').hidden = true;
   });
   $('#statsMenu').addEventListener('click', (e) => e.stopPropagation());
+
+  // viewer pointer interactions (delegated: the viewer body re-renders on view swaps)
+  document.addEventListener('pointerdown', (e) => {
+    // timeline scrubbing
+    const tr = e.target.closest('.viewer__track');
+    if (tr) {
+      e.preventDefault();
+      const seekTo = (ev) => {
+        const r = tr.getBoundingClientRect();
+        viewerSeek(((ev.clientX - r.left) / r.width) * VIEWER_TOTAL);
+      };
+      seekTo(e);
+      const move = (ev) => seekTo(ev);
+      const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); };
+      window.addEventListener('pointermove', move);
+      window.addEventListener('pointerup', up);
+      return;
+    }
+    // orbit: drag on the canvas rotates the camera
+    const cv = e.target.closest('.viewer__canvas');
+    if (cv) {
+      e.preventDefault();
+      const s = { x: e.clientX, y: e.clientY, yaw: viewer.cam.yaw, pitch: viewer.cam.pitch };
+      const move = (ev) => {
+        viewer.cam.yaw = s.yaw + (ev.clientX - s.x) * 0.01;
+        viewer.cam.pitch = Math.max(-1.45, Math.min(1.45, s.pitch + (ev.clientY - s.y) * 0.008));
+        drawViewer();
+      };
+      const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); };
+      window.addEventListener('pointermove', move);
+      window.addEventListener('pointerup', up);
+    }
+  });
+  // zoom with the wheel over the canvas
+  document.addEventListener('wheel', (e) => {
+    if (!e.target.closest?.('.viewer__canvas')) return;
+    e.preventDefault();
+    viewer.cam.zoom = Math.max(0.35, Math.min(3.5, viewer.cam.zoom * (e.deltaY < 0 ? 1.12 : 0.9)));
+    drawViewer();
+  }, { passive: false });
 
   // auto table ↔ stacked layout for the operations list on panel resize
   const ro = new ResizeObserver((entries) => {
     for (const en of entries) {
       const panel = en.target;
-      if (panel.dataset.view !== 'operations' || panel.classList.contains('is-collapsed')) continue;
+      if (panel.classList.contains('is-collapsed')) continue;
+      if (panel.dataset.view === 'viewer') { drawViewer(); continue; }
+      if (panel.dataset.view === 'tools') {
+        // hide the preview pane when the panel gets too narrow for it
+        const wrap = $('.toolswrap', panel);
+        if (wrap) wrap.classList.toggle('toolswrap--tight', $('.panel__body', panel).clientWidth < TOOLS_SIDE_MIN);
+        continue;
+      }
+      if (panel.dataset.view !== 'operations') continue;
       const body = $('.panel__body', panel);
       const stacked = body.clientWidth < opsNeededWidth();
       if (String(stacked) !== panel.dataset.opsStacked) body.innerHTML = renderOperations(panel);
@@ -646,6 +1097,24 @@ document.addEventListener('DOMContentLoaded', () => {
     } else moreMenu.hidden = true;
   });
   $$('#moreMenu button').forEach((b) => b.addEventListener('click', () => { moreMenu.hidden = true; }));
+
+  // compact header: the update date opens who-updated + created-on
+  const updBtn = $('#updBtn'), datePanel = $('#datePanel');
+  updBtn.addEventListener('click', (e) => {
+    if (!matchMedia('(max-width:1080px)').matches) return; // clickable only when the created date is hidden
+    e.stopPropagation();
+    const open = datePanel.hidden;
+    $$('.panel__menu').forEach((m) => { m.hidden = true; });
+    $('#moreMenu').hidden = true;
+    $('#membersPanel').hidden = true;
+    if (open) {
+      datePanel.hidden = false;
+      const r = updBtn.getBoundingClientRect();
+      datePanel.style.left = `${Math.max(8, Math.min(r.left, innerWidth - datePanel.offsetWidth - 8))}px`;
+      datePanel.style.top = `${r.bottom + 6}px`;
+    } else datePanel.hidden = true;
+  });
+  datePanel.addEventListener('click', (e) => e.stopPropagation());
 
   // project details popover (members)
   const membersBtn = $('#membersBtn'), membersPanel = $('#membersPanel');
