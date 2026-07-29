@@ -26,12 +26,34 @@
      inset outward: control 4 + inset 4 = container 8, etc. */
   --ec-radius:4px; --ec-radius-md:8px; --ec-radius-lg:12px;
   --divider:var(--ec-fg-8); --border:var(--ec-fg-16);
+  --ec-shadow:0 12px 40px rgba(0,0,0,.5);
 }
+
+/* ============================== LIGHT THEME ==============================
+   The whole UI runs on tokens, so the light theme is a token flip. What
+   deliberately STAYS dark: the 3D viewport and the part-preview plates —
+   they are windows into the machine. */
+:root[data-theme="light"] {
+  --ec-bg:#e9ebec; --ec-bg-80:rgba(252,253,253,.85); --ec-bg-96:rgba(252,253,253,.96);
+  --ec-rail:#f4f5f6; --ec-card:#fbfcfc; --ec-card-2:#eef0f1; --ec-popover:#ffffff;
+  --ec-fg-100:#16191b; --ec-fg-96:rgba(22,25,27,.96); --ec-fg-80:rgba(22,25,27,.82);
+  --ec-fg-72:rgba(22,25,27,.74); --ec-fg-64:rgba(22,25,27,.66); --ec-fg-56:rgba(22,25,27,.58);
+  --ec-fg-48:rgba(22,25,27,.5); --ec-fg-32:rgba(22,25,27,.36); --ec-fg-24:rgba(22,25,27,.28);
+  --ec-fg-16:rgba(22,25,27,.2); --ec-fg-12:rgba(22,25,27,.14); --ec-fg-8:rgba(22,25,27,.09);
+  --ec-fg-6:rgba(22,25,27,.07); --ec-fg-4:rgba(22,25,27,.05);
+  --operation-icon-fill:#4d5460; --operation-icon-accent:#e6e8ea;
+  --ec-shadow:0 12px 32px rgba(20,26,30,.2);
+}
+:root[data-theme="light"] .avatar--more { background:#dde0e2; color:var(--ec-fg-72); }
 
 * { box-sizing:border-box; margin:0; padding:0; }
 html,body { height:100%; }
 body { font-family:var(--ec-font); font-size:12px; line-height:16px; color:var(--ec-fg-100);
-  background:var(--ec-bg); -webkit-font-smoothing:antialiased; overflow:hidden; }
+  background:var(--ec-bg); -webkit-font-smoothing:antialiased; overflow:hidden;
+  /* app UI, not a document: no long-press text selection / tap flash on touch */
+  -webkit-user-select:none; user-select:none;
+  -webkit-touch-callout:none; -webkit-tap-highlight-color:transparent; }
+input, textarea { -webkit-user-select:text; user-select:text; }
 button { font-family:inherit; cursor:pointer; border:none; background:none; color:inherit; }
 svg { display:block; }
 ul { list-style:none; }
@@ -48,7 +70,8 @@ input { font-family:inherit; }
 
 /* ================================================================ SKELETON === */
 /* Header on top; below: left panel full height + right column split 50/50 */
-.app { height:100vh; display:flex; flex-direction:column; }
+/* dvh: iOS Safari's collapsing address bar must not clip the layout */
+.app { height:100vh; height:100dvh; display:flex; flex-direction:column; }
 
 .header { height:48px; flex-shrink:0; display:flex; align-items:center; gap:8px; padding:0 12px;
   background:var(--ec-rail); border-bottom:1px solid var(--divider); }
@@ -93,7 +116,7 @@ input { font-family:inherit; }
 /* ---- project details popover ---- */
 .pdetails { position:fixed; z-index:40; width:320px; padding:12px;
   border-radius:var(--ec-radius-md); background:var(--ec-popover); border:1px solid var(--border);
-  box-shadow:0 12px 40px rgba(0,0,0,.5); }
+  box-shadow:var(--ec-shadow); }
 .pdetails__head { display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; }
 .pdetails__title { font-size:14px; font-weight:600; color:var(--ec-fg-100); }
 .pdetails__cnt { font-weight:400; font-size:12px; color:var(--ec-fg-48); margin-left:2px; }
@@ -159,7 +182,7 @@ input { font-family:inherit; }
 .hmenu { position:fixed; z-index:40; min-width:200px; padding:4px;
   display:flex; flex-direction:column; gap:2px;
   border-radius:var(--ec-radius-md); background:var(--ec-popover); border:1px solid var(--border);
-  box-shadow:0 12px 40px rgba(0,0,0,.5); }
+  box-shadow:var(--ec-shadow); }
 .hmenu button { display:flex; align-items:center; gap:9px; height:30px; padding:0 9px;
   border-radius:var(--ec-radius); font-size:12px; color:var(--ec-fg-80); text-align:left; }
 .hmenu button:hover { background:var(--ec-fg-8); color:var(--ec-fg-100); }
@@ -172,7 +195,7 @@ input { font-family:inherit; }
 
 .main { flex:1; min-height:0; display:flex; padding:10px; }
 
-.panel { background:var(--ec-card); border:1px solid var(--border); border-radius:var(--ec-radius-md);
+.panel { background:var(--ec-card-2); border:1px solid var(--border); border-radius:var(--ec-radius-md);
   min-height:0; overflow:hidden; display:flex; flex-direction:column; }
 .panel--left { width:340px; flex-shrink:0; }
 
@@ -189,7 +212,7 @@ input { font-family:inherit; }
 .panel__menu { position:fixed; z-index:40; min-width:170px; padding:4px;
   display:flex; flex-direction:column; gap:2px;
   border-radius:var(--ec-radius-md); background:var(--ec-popover); border:1px solid var(--border);
-  box-shadow:0 12px 40px rgba(0,0,0,.5); }
+  box-shadow:var(--ec-shadow); }
 .panel__menu button { display:flex; align-items:center; width:100%; height:30px; padding:0 9px;
   border-radius:var(--ec-radius); font-size:12px; color:var(--ec-fg-80); }
 .panel__menu button:hover { background:var(--ec-fg-8); color:var(--ec-fg-100); }
@@ -206,7 +229,7 @@ input { font-family:inherit; }
 
 .statsmenu { position:fixed; z-index:40; width:232px; padding:8px;
   border-radius:var(--ec-radius-md); background:var(--ec-popover); border:1px solid var(--border);
-  box-shadow:0 12px 40px rgba(0,0,0,.5); }
+  box-shadow:var(--ec-shadow); }
 .statsmenu__label { font-size:11px; color:var(--ec-fg-48); margin:0 4px 6px; }
 .statsmenu .hmenu__sep { margin:10px -8px; }
 /* quiet divider between meaning-groups inside one list */
@@ -259,7 +282,14 @@ input { font-family:inherit; }
 
 /* draggable dividers (double as the 10px gap between panels);
    hover/drag: ENCY violet gradient line along the full length */
-.divider { flex-shrink:0; position:relative; }
+.divider { flex-shrink:0; position:relative; touch-action:none; }
+/* fingers need a wider grab zone than 10px — extend the hit area invisibly
+   on coarse pointers (layout and the mouse experience stay unchanged) */
+@media (pointer:coarse) {
+  .divider::before { content:''; position:absolute; z-index:1; }
+  .divider--v::before { inset:0 -8px; }
+  .divider--h::before { inset:-8px 0; }
+}
 .divider::after { content:''; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
   border-radius:999px; background:var(--ec-fg-12); transition:background .12s; }
 .divider--v { width:10px; cursor:col-resize; }
@@ -390,7 +420,7 @@ input { font-family:inherit; }
 
 .dtable { width:100%; border-collapse:collapse; font-size:12px; }
 .dtable th { position:sticky; top:0; z-index:1; height:28px; padding:0 8px; text-align:left;
-  background:var(--ec-card); font-size:11px; font-weight:400; color:var(--ec-fg-48);
+  background:var(--ec-card-2); font-size:11px; font-weight:400; color:var(--ec-fg-48);
   border-bottom:1px solid var(--divider); white-space:nowrap; }
 .dtable td { height:28px; padding:0 8px; border-bottom:1px solid var(--ec-fg-4);
   color:var(--ec-fg-80); white-space:nowrap; font-variant-numeric:tabular-nums; }
@@ -410,9 +440,6 @@ input { font-family:inherit; }
 .toolside { width:248px; flex-shrink:0; display:flex; flex-direction:column;
   border-left:1px solid var(--divider); overflow:auto; padding:8px; }
 .toolside__info { display:flex; flex-direction:column; }
-/* auto-hide applies to the right pane only — the bottom strip exists exactly
-   for panels that are too narrow for it */
-.toolswrap--tight:not(.toolswrap--bottom) .toolside { display:none; }
 
 /* bottom mode: the pane becomes a strip under the list — one header row
    (name left, controls right), the preview takes the full strip width */
@@ -453,6 +480,11 @@ input { font-family:inherit; }
 .tool__body { display:flex; gap:2px 16px; min-width:0; overflow:hidden; }
 .tool__col { display:flex; flex-direction:column; gap:2px; min-width:0; }
 .tool__col--quiet { border-left:1px solid var(--divider); padding-left:16px; }
+/* wide cards: params in one row (labels back to natural width), the
+   geometry|machine divider stays; wraps instead of clipping if it must */
+.toolsx--row .tool__body { flex-wrap:wrap; gap:4px 16px; }
+.toolsx--row .tool__col { flex-direction:row; flex-wrap:wrap; gap:4px 16px; }
+.toolsx--row .tspec i { width:auto; }
 .tspec { display:inline-flex; align-items:baseline; gap:6px; height:18px;
   font-size:12px; color:var(--ec-fg-96); font-variant-numeric:tabular-nums;
   white-space:nowrap; }
@@ -474,7 +506,7 @@ input { font-family:inherit; }
 .tool__expand svg { width:14px; height:14px; }
 
 .tool__preview { margin:0 4px; padding:16px 8px 12px; border-radius:var(--ec-radius-md);
-  background:var(--ec-card-2); display:flex; flex-direction:column; align-items:center; gap:12px; }
+  background:var(--ec-fg-4); display:flex; flex-direction:column; align-items:center; gap:12px; }
 .toolpv { height:180px; }
 .tool__cap { text-align:center; }
 .tool__cap b { display:block; font-size:13px; font-weight:600; color:var(--ec-fg-100); }
@@ -530,10 +562,25 @@ input { font-family:inherit; }
 .viewer__time { flex-shrink:0; padding:0 6px 0 2px; font-size:11px; color:var(--ec-fg-64);
   font-variant-numeric:tabular-nums; white-space:nowrap; }
 
+/* ================================================================ PHONE === */
+/* one full-screen panel; its view combobox is the content switcher — the
+   hidden panels keep holding state for the swap logic */
+@media (max-width:640px) {
+  .main { padding:8px; padding-bottom:calc(8px + env(safe-area-inset-bottom)); }
+  .panel--left, #bottomPanel, .divider { display:none !important; }
+  .rightcol .panel, .rightcol .panel.is-collapsed { flex:1 1 auto; }
+  .rightcol .panel.is-collapsed .panel__body { display:block; }
+  /* collapsing the only panel makes no sense */
+  .panel__collapse, .panel__collapse + .panel__sep { display:none; }
+  /* compact header: back + title + avatars + icon-only actions + more */
+  .chip-num, .header__sep, .header__date, .header__encybtn, .header__chat { display:none; }
+  .btn-secondary { font-size:0; gap:0; padding:0 6px; }
+}
+
 /* expanded preview overlay */
 .toolzoom { position:fixed; inset:0; z-index:60; display:grid; place-items:center;
   background:rgba(11,13,14,.72); cursor:zoom-out; }
 .toolzoom__card { display:flex; flex-direction:column; align-items:center; gap:16px;
   padding:24px; border-radius:var(--ec-radius-md); background:var(--ec-card);
-  border:1px solid var(--border); box-shadow:0 12px 40px rgba(0,0,0,.5); }
+  border:1px solid var(--border); box-shadow:var(--ec-shadow); }
 .toolzoom__card .toolpv { height:min(64vh, 520px); }

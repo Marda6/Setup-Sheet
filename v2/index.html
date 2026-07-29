@@ -4,6 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Workspace v2 · ENCY Core</title>
+  <!-- theme bootstrap before CSS so there is no flash of the wrong theme -->
+  <script>(function () {
+    var p = localStorage.getItem('ency-theme');
+    document.documentElement.dataset.theme = p === 'light' || p === 'dark' ? p
+      : (p === 'system' && matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+  })();</script>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -144,7 +150,7 @@
     <button class="btn-secondary"><svg><use href="#i-download"/></svg>Download</button>
     <button class="header__encybtn" title="Open in ENCY"><svg><use href="#i-ency"/></svg></button>
     <span class="header__sep"></span>
-    <button class="header__iconbtn" title="Chat"><svg><use href="#i-chat"/></svg></button>
+    <button class="header__iconbtn header__chat" title="Chat"><svg><use href="#i-chat"/></svg></button>
     <button class="header__iconbtn" id="moreBtn" title="More"><svg><use href="#i-more"/></svg></button>
     <div class="hmenu" id="moreMenu" hidden>
       <button><svg><use href="#i-bell"/></svg>Notifications</button>

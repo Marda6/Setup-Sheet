@@ -429,11 +429,38 @@ function openToolZoom(tno) {
 
 /* the preview pane needs ~248px: below this body width it hides itself */
 const TOOLS_SIDE_MIN = 520;
+/* list width from which the card params fit in a single row — measured from
+   the actual labels and the widest values, so the row survives until it
+   would really hit the card edge */
+let _measureCtx;
+function textW(s, font) {
+  if (!_measureCtx) _measureCtx = document.createElement('canvas').getContext('2d');
+  _measureCtx.font = font;
+  return _measureCtx.measureText(String(s)).width;
+}
+function toolsRowMin() {
+  const active = TOOL_STATS.filter((s) => s.group !== 'time' && toolStatsSet.has(s.key));
+  if (!active.length) return 0;
+  let w = 0;
+  for (const s of active) {
+    w += textW(s.label, '10px Inter, sans-serif') + 6
+       + Math.max(...TOOLS.map((t) => textW(s.val(t), '12px Inter, sans-serif')));
+  }
+  w += (active.length - 1) * 16;                                   // gaps between pairs
+  if (active.some((s) => s.group === 'geo') && active.some((s) => s.group === 'mach')) {
+    w += 17;                                                       // group divider: border + its padding
+  }
+  return w + 40;                                                   // card + list chrome, small safety
+}
 function renderTools(panel) {
   if (toolsPreviewPos !== 'off' && !selectedTool) selectedTool = TOOLS[0].tno;
+  const bodyW = panel ? $('.panel__body', panel).clientWidth : 0;
+  const tight = panel && bodyW < TOOLS_SIDE_MIN;
+  const bottomish = toolsPreviewPos === 'bottom' || (toolsPreviewPos === 'right' && tight);
+  const listW = bodyW - (toolsPreviewPos === 'right' && !bottomish ? 249 : 0);
   const cols = TOOL_STATS.filter((s) => toolStatsSet.has(s.key));
   const list = toolsMode === 'cards'
-    ? `<div class="toolsx">${TOOLS.map(toolBlockHTML).join('')}</div>`
+    ? `<div class="toolsx${listW >= toolsRowMin() ? ' toolsx--row' : ''}">${TOOLS.map(toolBlockHTML).join('')}</div>`
     : `<table class="dtable">
     <thead><tr><th>T#</th><th>Name</th>${cols.map((c) => `<th>${c.label}</th>`).join('')}</tr></thead>
     <tbody>
@@ -446,10 +473,10 @@ function renderTools(panel) {
     </tbody>
   </table>`;
   const t = TOOLS.find((x) => x.tno === selectedTool) || TOOLS[0];
-  const tight = panel && $('.panel__body', panel).clientWidth < TOOLS_SIDE_MIN;
   const side = toolsPreviewPos !== 'off' ? `<aside class="toolside" data-tool="${t.tno}">${toolSideInner(t)}</aside>` : '';
-  const mods = (tight ? ' toolswrap--tight' : '') + (toolsPreviewPos === 'bottom' ? ' toolswrap--bottom' : '');
-  return `<div class="toolswrap${mods}"><div class="toolslist">${list}</div>${side}</div>`;
+  // bottomish: the right pane never just disappears — when the panel is too
+  // narrow for it, it degrades into the bottom strip
+  return `<div class="toolswrap${bottomish ? ' toolswrap--bottom' : ''}"><div class="toolslist">${list}</div>${side}</div>`;
 }
 
 function refreshTools() {
@@ -988,6 +1015,7 @@ function initPanelHead(panel) {
 function makeDraggable(divider, onDrag) {
   let start = null, moved = false;
   divider.addEventListener('pointerdown', (e) => {
+    e.preventDefault(); // touch: no text-selection / scroll gesture from the grab
     start = { ...onDrag.start(e), x0: e.clientX, y0: e.clientY };
     moved = false;
     divider.classList.add('is-active');
@@ -1070,9 +1098,16 @@ document.addEventListener('DOMContentLoaded', () => {
       if (panel.classList.contains('is-collapsed')) continue;
       if (panel.dataset.view === 'viewer') { drawViewer(); continue; }
       if (panel.dataset.view === 'tools') {
-        // hide the preview pane when the panel gets too narrow for it
+        // the right pane degrades into the bottom strip when width runs out
         const wrap = $('.toolswrap', panel);
-        if (wrap) wrap.classList.toggle('toolswrap--tight', $('.panel__body', panel).clientWidth < TOOLS_SIDE_MIN);
+        if (wrap) {
+          const tight = $('.panel__body', panel).clientWidth < TOOLS_SIDE_MIN;
+          wrap.classList.toggle('toolswrap--bottom',
+            toolsPreviewPos === 'bottom' || (toolsPreviewPos === 'right' && tight));
+          // wide cards lay their params out in a single row
+          const tx = $('.toolsx', panel);
+          if (tx) tx.classList.toggle('toolsx--row', $('.toolslist', panel).clientWidth >= toolsRowMin());
+        }
         continue;
       }
       if (panel.dataset.view !== 'operations') continue;
@@ -1082,6 +1117,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   $$('.panel').forEach((p) => ro.observe(p));
+
+  // back to the Clouds projects listing
+  $('.header__back').addEventListener('click', () => { location.href = 'clouds.html'; });
 
   // header "more" dropdown
   const moreBtn = $('#moreBtn'), moreMenu = $('#moreMenu');
