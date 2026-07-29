@@ -1118,6 +1118,9 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   $$('.panel').forEach((p) => ro.observe(p));
 
+  // back to the Clouds projects listing
+  $('.header__back').addEventListener('click', () => { location.href = 'clouds.html'; });
+
   // header "more" dropdown
   const moreBtn = $('#moreBtn'), moreMenu = $('#moreMenu');
   moreBtn.addEventListener('click', (e) => {

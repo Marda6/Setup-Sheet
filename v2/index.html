@@ -4,6 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Workspace v2 · ENCY Core</title>
+  <!-- theme bootstrap before CSS so there is no flash of the wrong theme -->
+  <script>(function () {
+    var p = localStorage.getItem('ency-theme');
+    document.documentElement.dataset.theme = p === 'light' || p === 'dark' ? p
+      : (p === 'system' && matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+  })();</script>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
