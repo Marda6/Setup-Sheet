@@ -316,11 +316,12 @@ function renderBody() {
     sub.innerHTML = [
       col?.owner ? `<span>${col.owner}</span>` : '',
       `<span>${n} project${n === 1 ? '' : 's'}</span>`,
-      `<span>Updated ${fmtUpd(col.upd)}</span>`,
+      `<span class="clouds__mitem" title="Updated"><svg><use href="#i-clock"/></svg>${fmtUpd(col.upd.split('T')[0])}</span>`,
     ].filter(Boolean).join('<i class="clouds__msep"></i>');
   }
   // list/grid applies to projects only; ghost stubs, settings and QR need no controls
   $('#viewMode').hidden = isGhost || isCol || isSet || isQR || isChats;
+  $('#chat3dBtn').hidden = !isChats;
   $('#sortBtn').hidden = isGhost || isSet || isQR || isChats;
   $('#filters').hidden = isGhost || isSet || isQR || isChats;
   $('.search').hidden = isSet || isQR;
@@ -330,7 +331,6 @@ function renderBody() {
   // the chats layout owns its scrolling — the panel body must not scroll;
   // its search also moves next to the title (the head's right side is empty)
   body.classList.toggle('clouds__body--chats', isChats);
-  $('.clouds__head').classList.toggle('clouds__head--chats', isChats);
   if (isGhost) { body.innerHTML = `<div class="ghost">${sc.ghost}</div>`; return; }
   if (isChats) { renderChats(body); return; }
   if (isSet) { renderSettings(body); return; }
@@ -395,8 +395,17 @@ function renderFilters() {
     return `<button class="fchip${chipActive(f) ? ' is-active' : ''}" data-filter="${f.id}" data-fitem="${f.id}">
       ${chipLabel(f)}<svg><use href="#i-chevdown"/></svg></button>`;
   }).join('') + `<button class="fchip" id="fMore" hidden>
-      More<svg><use href="#i-chevdown"/></svg></button>`;
+      More<svg><use href="#i-chevdown"/></svg></button>`
+    + (FILTERS.some((f) => !f.input && chipActive(f))
+      ? `<button class="fclear" id="fClear" title="Clear all filters">
+          <svg><use href="#i-close"/></svg>Clear all</button>` : '');
   layoutFilters();
+}
+
+function clearFilters() {
+  FILTERS.forEach((f) => { fstate[f.id] = f.multi ? new Set() : (f.def || ''); });
+  closeMenus();
+  renderFilters();
 }
 
 /* narrow panels: chips that don't fit fold into a "More · N" chip with a
@@ -489,6 +498,7 @@ function renderChats(body) {
   };
   const rootCls = `chats${state.c3dFull ? ' chats--full' : ''}${state.c3dOn ? '' : ' chats--no3d'}${state.chatPane === 'conv' ? ' chats--conv' : ''}`;
   const c3dShown = state.c3dFull || (state.c3dOn && !matchMedia('(max-width:1200px)').matches);
+  $('#chat3dBtn').classList.toggle('is-active', c3dShown);
   body.innerHTML = `<div class="${rootCls}">
     <div class="chatlist">${list.map(item).join('')}</div>
     <div class="chatview">
@@ -498,7 +508,6 @@ function renderChats(body) {
         <span class="chatview__cnt">${cur.members} members</span>
         <div class="panel__hspacer"></div>
         <button class="btn-secondary" data-open="${cur.project}"><svg><use href="#i-cube"/></svg>Open project</button>
-        <button class="header__iconbtn${c3dShown ? ' is-active' : ''}" data-toggle3d title="3D view"><svg><use href="#i-panel-right"/></svg></button>
       </div>
       <div class="chatview__tools">
         <button class="fchip${state.chatTag ? ' is-active' : ''}" data-tagbtn>
@@ -1144,6 +1153,7 @@ function init() {
 
   // filter chips
   $('#filters').addEventListener('click', (e) => {
+    if (e.target.closest('#fClear')) { e.stopPropagation(); clearFilters(); return; }
     if (e.target.closest('#fMore')) {
       e.stopPropagation();
       const menu = $('#morefMenu');
@@ -1213,14 +1223,6 @@ function init() {
       return;
     }
     if (e.target.closest('[data-chatback]')) { state.chatPane = 'list'; renderBody(); return; }
-    const t3d = e.target.closest('[data-toggle3d]');
-    if (t3d) {
-      // narrow layouts have no side pane — the toggle goes straight to full 3D
-      if (matchMedia('(max-width:1200px)').matches) state.c3dFull = !state.c3dFull;
-      else state.c3dOn = !state.c3dOn;
-      renderBody();
-      return;
-    }
     if (e.target.closest('#chatSend')) { sendChatMsg(); return; }
     if (e.target.closest('.chatclip')) {
       // prototype: stage the next demo file instead of a real file picker
@@ -1313,6 +1315,15 @@ function init() {
       $('#searchField').value = '';
       renderBody();
     }
+  });
+
+  // chats: the 3D toggle lives in the panel head so it works in fullscreen 3D too
+  $('#chat3dBtn').addEventListener('click', () => {
+    if (state.c3dFull) { state.c3dFull = false; state.c3dOn = false; } // fullscreen → off
+    // narrow layouts have no side pane — the toggle goes straight to full 3D
+    else if (matchMedia('(max-width:1200px)').matches) state.c3dFull = true;
+    else state.c3dOn = !state.c3dOn;
+    renderBody();
   });
 
   // in-collection head: the info button shows the folded meta on narrow screens

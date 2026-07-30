@@ -81,7 +81,7 @@
 .ntf__text { flex:1; min-width:0; font-size:12px; line-height:16px; color:var(--ec-fg-80); }
 .ntf__text b { font-weight:500; color:var(--ec-fg-100); }
 .ntf__time { display:block; margin-top:2px; font-size:11px; color:var(--ec-fg-48); }
-.ntf__dot { width:6px; height:6px; border-radius:999px; background:var(--ec-green);
+.ntf__dot { width:6px; height:6px; border-radius:999px; background:var(--ec-badge);
   margin-top:5px; flex-shrink:0; opacity:0; }
 .ntf.is-unread .ntf__dot { opacity:1; }
 
@@ -102,7 +102,7 @@
 /* unread indicator on the bell */
 .nav__bell { position:relative; }
 .nav__bell.has-unread::after { content:''; position:absolute; top:4px; right:4px;
-  width:6px; height:6px; border-radius:999px; background:var(--ec-green); }
+  width:6px; height:6px; border-radius:999px; background:var(--ec-badge); }
 
 /* ================================================================ CONTENT === */
 .clouds { flex:1; min-width:0; background:var(--ec-card); }
@@ -119,6 +119,8 @@
 .clouds__sub { display:flex; align-items:center; gap:8px; margin-left:8px; font-size:11px;
   color:var(--ec-fg-48); white-space:nowrap; overflow:hidden; flex-shrink:1; }
 .clouds__msep { width:1px; height:12px; background:var(--ec-fg-12); flex-shrink:0; }
+.clouds__mitem { display:inline-flex; align-items:center; gap:5px; }
+.clouds__mitem svg { width:13px; height:13px; color:var(--ec-fg-48); flex-shrink:0; }
 /* narrow screens: the meta folds into the info button with a popover */
 .clouds__info { display:none; }
 @media (max-width:1000px) {
@@ -157,6 +159,13 @@
 /* the More popover: folded filters as menu rows; the model input keeps its field */
 .hmenu__inp { padding:2px 4px; }
 .hmenu__inp .field { width:160px; }
+
+/* quiet "Clear all" text button — shown only while any filter is active */
+.fclear { display:inline-flex; align-items:center; gap:5px; height:24px; padding:0 8px;
+  border-radius:var(--ec-radius); font-size:12px; color:var(--ec-fg-56); flex-shrink:0;
+  transition:background .12s,color .12s; }
+.fclear:hover { background:var(--ec-fg-8); color:var(--ec-fg-100); }
+.fclear svg { width:11px; height:11px; flex-shrink:0; }
 
 /* filter/sort menus reuse .hmenu; checked rows get the check icon slot */
 .hmenu .ck { width:15px; height:15px; visibility:hidden; }
@@ -333,7 +342,7 @@ button.setrow:hover { background:var(--ec-fg-6); }
   flex-shrink:0; align-self:flex-start; padding-top:2px; }
 .chatitem__time { font-size:10px; color:var(--ec-fg-32); font-variant-numeric:tabular-nums; }
 .chatitem__unread { min-width:16px; height:16px; padding:0 5px; border-radius:999px;
-  background:var(--ec-green); color:#04150e; font-size:10px; font-weight:600;
+  background:var(--ec-badge); color:#04150e; font-size:10px; font-weight:600;
   display:grid; place-items:center; }
 
 .chatview { flex:1; min-width:0; display:flex; flex-direction:column; }
@@ -437,13 +446,12 @@ button.setrow:hover { background:var(--ec-fg-6); }
 .chatclip svg { width:16px; height:16px; }
 
 /* chats scope: the search moves next to the title (the head's right side is empty) */
-.clouds__head--chats .panel__hspacer { order:1; }
-.clouds__head--chats .panel__sep { display:none; }
-.clouds__head--chats .search { margin-left:4px; }
+/* chats scope: the search sits right like on every other page; the 3D toggle
+   lives in the panel head (#chat3dBtn) so it survives the fullscreen 3D mode */
+.clouds__head .header__iconbtn.is-active { background:var(--ec-fg-8); color:var(--ec-fg-100); }
 
 /* back to the chat list (phone only) + 3D toggle in the thread head */
 .chatview__back { display:none; }
-.chatview__head .header__iconbtn.is-active { background:var(--ec-fg-8); color:var(--ec-fg-100); }
 
 /* 3D view of the part next to the thread (stays dark in both themes) */
 .chat3d { flex:1.2; min-width:280px; position:relative; background:#0b0d0e;
