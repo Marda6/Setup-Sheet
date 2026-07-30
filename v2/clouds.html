@@ -21,6 +21,8 @@
   <symbol id="i-chevdown" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></symbol>
   <symbol id="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l4 4 12-11"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 11.2v5"/><path d="M12 7.8h.01"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="15" rx="2"/><path d="M8 3v5M16 3v5M4 11h16"/></symbol>
   <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></symbol>
   <symbol id="i-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-12.3 7.6L4 21l1.9-4.7A8.5 8.5 0 1 1 21 11.5z"/></symbol>
   <symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8.5a6 6 0 0 0-12 0c0 6.5-2.5 8-2.5 8h17s-2.5-1.5-2.5-8"/><path d="M10.3 20a2 2 0 0 0 3.4 0"/></symbol>
@@ -143,7 +145,11 @@
     <!-- ===================== CONTENT ===================== -->
     <section class="panel clouds">
       <header class="panel__head clouds__head">
+        <button class="header__iconbtn clouds__back" id="colBack" hidden title="Back to collections"><svg><use href="#i-back"/></svg></button>
         <div class="clouds__title" id="cloudsTitle">All projects</div>
+        <span class="coltag" id="colTag" hidden>Collection</span>
+        <span class="clouds__sub" id="cloudsSub" hidden></span>
+        <button class="header__iconbtn clouds__info" id="colInfoBtn" hidden title="Collection info"><svg><use href="#i-info"/></svg></button>
         <div class="panel__hspacer"></div>
         <div class="search">
           <svg><use href="#i-search"/></svg>
@@ -160,6 +166,8 @@
       <div class="filters" id="filters"></div>
       <div class="panel__body clouds__body" id="cloudsBody"></div>
       <div class="hmenu" id="filterMenu" hidden></div>
+      <div class="hmenu" id="morefMenu" hidden></div>
+      <div class="hmenu colinfo" id="colInfoMenu" hidden></div>
       <div class="hmenu" id="cardMenu" hidden></div>
       <div class="hmenu" id="langMenu" hidden></div>
       <div class="hmenu" id="tagMenu" hidden></div>

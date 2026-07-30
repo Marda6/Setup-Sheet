@@ -7,45 +7,47 @@ const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
 /* ================================================================ DATA === */
-/* vis: public | my; shared marks "Shared with me"; upd/created drive sorting */
+/* vis: public | my; shared marks "Shared with me"; upd/created drive sorting;
+   cols lists the collections the project belongs to (feeds the in-collection page) */
 const PROJECTS = [
-  { name: 'Swarf_AutoSyncLine',                vis: 'public', upd: '2026-07-24T10:14', created: '2026-07-20', thumb: 'block' },
-  { name: 'Swarf_SyncByMech',                  vis: 'public', upd: '2026-07-24T10:14', created: '2026-07-19', thumb: 'ball' },
-  { name: 'Copy of Sequential machining (WIP)', vis: 'my',    upd: '2026-07-10T11:24', created: '2026-07-10', thumb: 'lever', p3d: true },
-  { name: 'Sequential machining (WIP)',        vis: 'public', upd: '2026-06-29T14:06', created: '2026-06-04', thumb: 'lever', starred: true, open: true, p3d: true },
-  { name: '5D Roughing waterline',             vis: 'public', upd: '2026-06-23T10:50', created: '2026-06-20', thumb: 'tray', p3d: true },
-  { name: 'Tabs',                              vis: 'public', upd: '2026-06-22T14:07', created: '2026-06-18', thumb: 'bracket' },
-  { name: 'Mounting Plate_tuner',              vis: 'public', upd: '2026-06-16T14:44', created: '2026-06-12', thumb: 'plate', starred: true },
-  { name: '2D contouring_tuner',               vis: 'public', upd: '2026-06-16T14:38', created: '2026-06-12', thumb: 'block' },
-  { name: 'Optimize_Feed_in_Cross_Holes_tuner', vis: 'public', upd: '2026-06-16T14:19', created: '2026-06-11', thumb: 'plate' },
-  { name: 'Corner_control_tuner',              vis: 'public', upd: '2026-06-16T13:38', created: '2026-06-11', thumb: 'bracket' },
-  { name: 'Through_point_tuner',               vis: 'public', upd: '2026-06-16T12:05', created: '2026-06-10', thumb: 'fork' },
-  { name: 'Contact Points_tuner',              vis: 'public', upd: '2026-06-16T11:57', created: '2026-06-10', thumb: 'lever' },
-  { name: 'Extend surface_tuner',              vis: 'public', upd: '2026-06-15T12:09', created: '2026-06-09', thumb: 'tray' },
-  { name: 'impeller_5ax_tuner',                vis: 'public', upd: '2026-06-15T12:09', created: '2026-06-09', thumb: 'impeller', starred: true, p3d: true },
-  { name: 'Swarf_strategy',                    vis: 'public', upd: '2026-06-12T14:54', created: '2026-06-05', thumb: 'tray', p3d: true },
-  { name: 'Bushing_bore_tuner',                vis: 'public', upd: '2026-06-10T09:41', created: '2026-06-02', thumb: 'cyl' },
-  { name: 'Flange_adapter',                    vis: 'my',     upd: '2026-06-08T16:20', created: '2026-05-28', thumb: 'cyl' },
-  { name: 'Vise_soft_jaws',                    vis: 'my',     upd: '2026-06-05T11:02', created: '2026-05-22', thumb: 'block' },
-  { name: 'Fixture_test_setup',                vis: 'my',     upd: '2026-06-03T09:15', created: '2026-05-20', thumb: 'plate' },
-  { name: 'Cover_plate_rev2',                  vis: 'my',     upd: '2026-06-02T17:40', created: '2026-05-19', thumb: 'bracket' },
-  { name: 'Turbine_blade_demo',                vis: 'public', shared: true, upd: '2026-06-02T13:15', created: '2026-05-18', thumb: 'impeller' },
+  { name: 'Swarf_AutoSyncLine',                vis: 'public', upd: '2026-07-24T10:14', created: '2026-07-20', thumb: 'block', cols: ['5x milling'] },
+  { name: 'Swarf_SyncByMech',                  vis: 'public', upd: '2026-07-24T10:14', created: '2026-07-19', thumb: 'ball', cols: ['5x milling'] },
+  { name: 'Copy of Sequential machining (WIP)', vis: 'my',    upd: '2026-07-10T11:24', created: '2026-07-10', thumb: 'lever', p3d: true, cols: ['ENCY 3'] },
+  { name: 'Sequential machining (WIP)',        vis: 'public', upd: '2026-06-29T14:06', created: '2026-06-04', thumb: 'lever', starred: true, open: true, p3d: true, cols: ['ENCY 3'] },
+  { name: '5D Roughing waterline',             vis: 'public', upd: '2026-06-23T10:50', created: '2026-06-20', thumb: 'tray', p3d: true, cols: ['ENCY 3', '3x milling'] },
+  { name: 'Tabs',                              vis: 'public', upd: '2026-06-22T14:07', created: '2026-06-18', thumb: 'bracket', cols: ['ENCY 3', 'Woodworking'] },
+  { name: 'Mounting Plate_tuner',              vis: 'public', upd: '2026-06-16T14:44', created: '2026-06-12', thumb: 'plate', starred: true, cols: ['Tuner 3x milling', '3x milling'] },
+  { name: '2D contouring_tuner',               vis: 'public', upd: '2026-06-16T14:38', created: '2026-06-12', thumb: 'block', cols: ['Tuner 3x milling', '3x milling'] },
+  { name: 'Optimize_Feed_in_Cross_Holes_tuner', vis: 'public', upd: '2026-06-16T14:19', created: '2026-06-11', thumb: 'plate', cols: ['Tuner 3x milling', 'FBM Examples'] },
+  { name: 'Corner_control_tuner',              vis: 'public', upd: '2026-06-16T13:38', created: '2026-06-11', thumb: 'bracket', cols: ['Tuner 3x milling', '3x milling'] },
+  { name: 'Through_point_tuner',               vis: 'public', upd: '2026-06-16T12:05', created: '2026-06-10', thumb: 'fork', cols: ['Tuner 5x milling'] },
+  { name: 'Contact Points_tuner',              vis: 'public', upd: '2026-06-16T11:57', created: '2026-06-10', thumb: 'lever', cols: ['Tuner 5x milling'] },
+  { name: 'Extend surface_tuner',              vis: 'public', upd: '2026-06-15T12:09', created: '2026-06-09', thumb: 'tray', cols: ['Tuner 5x milling', '5x milling'] },
+  { name: 'impeller_5ax_tuner',                vis: 'public', upd: '2026-06-15T12:09', created: '2026-06-09', thumb: 'impeller', starred: true, p3d: true, cols: ['Tuner 5x milling', '5x milling'] },
+  { name: 'Swarf_strategy',                    vis: 'public', upd: '2026-06-12T14:54', created: '2026-06-05', thumb: 'tray', p3d: true, cols: ['5x milling', 'ENCY 3'] },
+  { name: 'Bushing_bore_tuner',                vis: 'public', upd: '2026-06-10T09:41', created: '2026-06-02', thumb: 'cyl', cols: ['FBM Examples', '3x milling'] },
+  { name: 'Flange_adapter',                    vis: 'my',     upd: '2026-06-08T16:20', created: '2026-05-28', thumb: 'cyl', cols: ['FBM Examples', 'Robot Welding'] },
+  { name: 'Vise_soft_jaws',                    vis: 'my',     upd: '2026-06-05T11:02', created: '2026-05-22', thumb: 'block', cols: ['Woodworking'] },
+  { name: 'Fixture_test_setup',                vis: 'my',     upd: '2026-06-03T09:15', created: '2026-05-20', thumb: 'plate', cols: ['Probing collection', 'Robot Welding'] },
+  { name: 'Cover_plate_rev2',                  vis: 'my',     upd: '2026-06-02T17:40', created: '2026-05-19', thumb: 'bracket', cols: ['Probing collection', 'Woodworking'] },
+  { name: 'Turbine_blade_demo',                vis: 'public', shared: true, upd: '2026-06-02T13:15', created: '2026-05-18', thumb: 'impeller', cols: ['5x milling', 'ENCY 3'] },
 ];
+const colProjects = (name) => PROJECTS.filter((p) => p.cols?.includes(name));
 
-/* collections: color is the identity; count is "N projects", parts feed the
-   preview circles (count <= 4 shows all, otherwise 3 + overflow) */
+/* collections: color is the identity; the project count and the preview
+   circles are derived live from PROJECTS.cols membership */
 /* bright reference palette (Ruslan's colors) — the cards are the one
    deliberately vivid spot of the dark UI */
 const COLLECTIONS = [
-  { name: 'Tuner 3x milling',   color: '#eb84e0', upd: '2026-06-16T14:44', created: '2026-04-02', owner: 'Ilnar Galiullin', count: 4, parts: ['bracket', 'plate', 'block', 'lever'] },
-  { name: 'Tuner 5x milling',   color: '#8fe57e', upd: '2026-06-16T12:09', created: '2026-04-02', owner: 'Ilnar Galiullin', count: 4, parts: ['impeller', 'tray', 'fork', 'cyl'] },
-  { name: 'ENCY 3',             color: '#d9eb84', upd: '2026-06-05T16:34', created: '2026-03-18', owner: 'ENCY Team', count: 7, parts: ['tray', 'fork', 'plate'] },
-  { name: 'Woodworking',        color: '#ebda84', upd: '2026-04-27T18:03', created: '2026-03-02', owner: 'ENCY Team', count: 9, parts: ['cyl', 'ball', 'block'] },
-  { name: 'Probing collection', color: '#84ebb8', upd: '2026-04-24T11:32', created: '2026-02-24', owner: 'ENCY Team', count: 6, parts: ['plate', 'block', 'tray'] },
-  { name: '5x milling',         color: '#eb84b4', upd: '2026-04-17T12:44', created: '2026-02-10', owner: 'ENCY Team', count: 4, parts: ['fork', 'ball', 'lever', 'impeller'] },
-  { name: '3x milling',         color: '#ff7072', upd: '2026-04-17T12:43', created: '2026-02-10', owner: 'ENCY Team', count: 7, parts: ['plate', 'bracket', 'lever'] },
-  { name: 'Robot Welding',      color: '#84e5eb', upd: '2026-04-17T12:14', created: '2026-02-08', owner: 'Ilnar Galiullin', count: 5, parts: ['tray', 'block', 'cyl'] },
-  { name: 'FBM Examples',       color: '#84c9eb', upd: '2026-04-17T12:01', created: '2026-02-08', count: 9, parts: ['cyl', 'plate', 'bracket'] },
+  { name: 'Tuner 3x milling',   color: '#eb84e0', upd: '2026-06-16T14:44', created: '2026-04-02', owner: 'Ilnar Galiullin' },
+  { name: 'Tuner 5x milling',   color: '#8fe57e', upd: '2026-06-16T12:09', created: '2026-04-02', owner: 'Ilnar Galiullin' },
+  { name: 'ENCY 3',             color: '#d9eb84', upd: '2026-06-05T16:34', created: '2026-03-18', owner: 'ENCY Team' },
+  { name: 'Woodworking',        color: '#ebda84', upd: '2026-04-27T18:03', created: '2026-03-02', owner: 'ENCY Team' },
+  { name: 'Probing collection', color: '#84ebb8', upd: '2026-04-24T11:32', created: '2026-02-24', owner: 'ENCY Team' },
+  { name: '5x milling',         color: '#eb84b4', upd: '2026-04-17T12:44', created: '2026-02-10', owner: 'ENCY Team' },
+  { name: '3x milling',         color: '#ff7072', upd: '2026-04-17T12:43', created: '2026-02-10', owner: 'ENCY Team' },
+  { name: 'Robot Welding',      color: '#84e5eb', upd: '2026-04-17T12:14', created: '2026-02-08', owner: 'Ilnar Galiullin' },
+  { name: 'FBM Examples',       color: '#84c9eb', upd: '2026-04-17T12:01', created: '2026-02-08' },
 ];
 
 /* inbox: demo notifications tied to the project-page cast + one live invite */
@@ -150,11 +152,13 @@ const SCOPES = {
   'col-all':     { title: 'Collections',         collections: () => true },
   'col-my':      { title: 'My collections',      collections: (c) => c.mine },
   'col-starred': { title: 'Starred collections', collections: (c) => c.starred },
+  incol:   { title: '', filter: (p) => p.cols?.includes(state.col) },
   mobile:  { title: 'Mobile app',          qr: true },
   settings: { title: 'Account settings',   settings: true },
 };
 const state = { scope: 'all', q: '', mode: 'grid', sort: 'updated',
-  chat: 1, chatTag: null, c3dFull: false, c3dOn: true, chatPane: 'list' };
+  chat: 1, chatTag: null, c3dFull: false, c3dOn: true, chatPane: 'list',
+  composerAtts: [], col: null, colFrom: 'col-all' };
 
 /* project-page cast, shared by chats and the inbox */
 const MEMBERS = {
@@ -265,10 +269,12 @@ function renderCollections(body, sc) {
     return;
   }
   body.innerHTML = `<div class="colgrid">${list.map((c) => {
-    const shown = c.count <= 4 ? c.parts.slice(0, 4) : c.parts.slice(0, 3);
-    const extra = c.count - shown.length;
+    const members = colProjects(c.name);
+    const thumbs = [...new Set(members.map((p) => p.thumb))];
+    const shown = members.length <= 4 ? thumbs.slice(0, 4) : thumbs.slice(0, 3);
+    const extra = members.length - shown.length;
     return `
-    <div class="ccard" style="--cc:${c.color}">
+    <div class="ccard" style="--cc:${c.color}" data-opencol="${c.name}">
       <div class="ccard__head">
         <div class="ccard__name">${c.name}</div>
         <span class="ccard__upd"><svg><use href="#i-clock"/></svg>${fmtUpd(c.upd)}</span>
@@ -279,7 +285,7 @@ function renderCollections(body, sc) {
         <span class="ccard__mitem" title="${c.private ? 'Private' : 'Public'}">
           <svg><use href="#i-${c.private ? 'user' : 'globe'}"/></svg>${c.owner || (c.private ? 'Private' : 'Public')}</span>
         <span class="ccard__msep"></span>
-        <span class="ccard__mitem"><svg><use href="#i-folder"/></svg>${c.count} projects</span>
+        <span class="ccard__mitem"><svg><use href="#i-folder"/></svg>${members.length} projects</span>
       </div>
       <div class="ccard__parts">
         ${shown.map((k) => `<span class="cpart">${partSVG(k)}</span>`).join('')}
@@ -293,16 +299,34 @@ function renderBody() {
   renderCounts();
   const body = $('#cloudsBody');
   const sc = SCOPES[state.scope];
-  $('#cloudsTitle').textContent = sc.title;
   const isGhost = !!sc.ghost, isCol = !!sc.collections, isSet = !!sc.settings, isQR = !!sc.qr,
-    isChats = !!sc.chats;
+    isChats = !!sc.chats, isInCol = state.scope === 'incol';
+  // in-collection head: back to collections + colored "Collection" tag + meta
+  const col = isInCol ? COLLECTIONS.find((c) => c.name === state.col) : null;
+  $('#cloudsTitle').textContent = isInCol ? state.col : sc.title;
+  $('#colBack').hidden = !isInCol;
+  const tag = $('#colTag');
+  tag.hidden = !isInCol;
+  if (col) tag.style.background = col.color;
+  const sub = $('#cloudsSub');
+  sub.hidden = !isInCol;
+  $('#colInfoBtn').hidden = !isInCol;
+  if (isInCol) {
+    const n = colProjects(state.col).length;
+    sub.innerHTML = [
+      col?.owner ? `<span>${col.owner}</span>` : '',
+      `<span>${n} project${n === 1 ? '' : 's'}</span>`,
+      `<span>Updated ${fmtUpd(col.upd)}</span>`,
+    ].filter(Boolean).join('<i class="clouds__msep"></i>');
+  }
   // list/grid applies to projects only; ghost stubs, settings and QR need no controls
   $('#viewMode').hidden = isGhost || isCol || isSet || isQR || isChats;
   $('#sortBtn').hidden = isGhost || isSet || isQR || isChats;
   $('#filters').hidden = isGhost || isSet || isQR || isChats;
   $('.search').hidden = isSet || isQR;
   $('#searchField').placeholder = isChats ? 'Search a chat'
-    : isCol ? 'Search a collection' : 'Search a project';
+    : isCol ? 'Search a collection' : isInCol ? 'Search in the collection' : 'Search a project';
+  layoutFilters();
   // the chats layout owns its scrolling — the panel body must not scroll;
   // its search also moves next to the title (the head's right side is empty)
   body.classList.toggle('clouds__body--chats', isChats);
@@ -316,7 +340,9 @@ function renderBody() {
   const list = visibleProjects();
   if (!list.length) {
     body.innerHTML = `<div class="clouds__empty"><svg><use href="#i-cube"/></svg>
-      <b>No projects here</b><span>${state.q ? 'Nothing matches your search' : 'Projects you add will show up here'}</span></div>`;
+      <b>No projects here</b><span>${state.q ? 'Nothing matches your search'
+        : isInCol ? 'Projects added to this collection will show up here'
+        : 'Projects you add will show up here'}</span></div>`;
     return;
   }
 
@@ -365,10 +391,50 @@ function chipActive(f) {
 }
 function renderFilters() {
   $('#filters').innerHTML = FILTERS.map((f) => {
-    if (f.input) return `<input class="field" id="f-${f.id}" type="text" placeholder="${f.input}" />`;
-    return `<button class="fchip${chipActive(f) ? ' is-active' : ''}" data-filter="${f.id}">
+    if (f.input) return `<input class="field" id="f-${f.id}" data-fitem="${f.id}" type="text" placeholder="${f.input}" />`;
+    return `<button class="fchip${chipActive(f) ? ' is-active' : ''}" data-filter="${f.id}" data-fitem="${f.id}">
       ${chipLabel(f)}<svg><use href="#i-chevdown"/></svg></button>`;
+  }).join('') + `<button class="fchip" id="fMore" hidden>
+      More<svg><use href="#i-chevdown"/></svg></button>`;
+  layoutFilters();
+}
+
+/* narrow panels: chips that don't fit fold into a "More · N" chip with a
+   popover instead of wrapping to a second row */
+function layoutFilters() {
+  const wrap = $('#filters');
+  const more = $('#fMore');
+  if (!more) return;
+  const items = $$('[data-fitem]', wrap);
+  items.forEach((el) => { el.hidden = false; });
+  more.hidden = true;
+  if (wrap.hidden || wrap.scrollWidth <= wrap.clientWidth) { more.dataset.hidden = ''; return; }
+  more.hidden = false;
+  more.firstChild.textContent = `More · ${FILTERS.length}`; // widest label while measuring
+  const folded = [];
+  for (let i = items.length - 1; i >= 0 && wrap.scrollWidth > wrap.clientWidth; i--) {
+    items[i].hidden = true;
+    folded.unshift(items[i].dataset.fitem);
+  }
+  more.dataset.hidden = folded.join(',');
+  const active = folded.some((id) => {
+    const f = FILTERS.find((x) => x.id === id);
+    return f && !f.input && chipActive(f);
+  });
+  more.classList.toggle('is-active', active);
+  more.firstChild.textContent = `More · ${folded.length}`;
+}
+
+function openMoreFilters() {
+  const menu = $('#morefMenu');
+  const ids = ($('#fMore').dataset.hidden || '').split(',').filter(Boolean);
+  menu.innerHTML = ids.map((id) => {
+    const f = FILTERS.find((x) => x.id === id);
+    if (f.input) return `<div class="hmenu__inp"><input class="field" type="text" placeholder="${f.input}"></div>`;
+    return `<button class="${chipActive(f) ? 'is-checked' : ''}" data-mfilter="${id}">
+      <svg class="ck"><use href="#i-check"/></svg>${chipLabel(f)}<svg class="chev"><use href="#i-chev"/></svg></button>`;
   }).join('');
+  openMenuAt(menu, $('#fMore'));
 }
 
 /* ================================================================ CHATS === */
@@ -386,7 +452,7 @@ function renderChats(body) {
   const cur = CHATS.find((c) => c.id === state.chat);
   cur.unread = 0; // the open conversation is read
   const shown = state.chatTag ? cur.msgs.filter((m) => m.tags?.includes(state.chatTag)) : cur.msgs;
-  const attCount = cur.msgs.filter((m) => m.att).length;
+  const attCount = cur.msgs.reduce((n, m) => n + (m.atts?.length || (m.att ? 1 : 0)), 0);
 
   const item = (c) => {
     const last = c.msgs[c.msgs.length - 1];
@@ -414,8 +480,8 @@ function renderChats(body) {
       <span class="avatar" style="--av:${mm.color}">${me ? 'RM' : m.from}</span>
       <span class="msg__bubble">
         ${me ? '' : `<span class="msg__from" style="color:${mm.color}">${mm.name}</span>`}
-        <span class="msg__text">${esc(m.text)}</span>
-        ${m.att ? attHTML(m.att) : ''}
+        ${m.text ? `<span class="msg__text">${esc(m.text)}</span>` : ''}
+        ${(m.atts || (m.att ? [m.att] : [])).map(attHTML).join('')}
         ${m.tags?.length ? `<span class="msg__tags">${m.tags.map((t) => `<span>#${t}</span>`).join('')}</span>` : ''}
         <span class="msg__time">${m.time}</span>
       </span>
@@ -444,9 +510,15 @@ function renderChats(body) {
         : `<div class="clouds__empty"><svg><use href="#i-tag"/></svg>
             <b>No messages with #${state.chatTag}</b><span>Try another tag or reset the filter</span></div>`}</div>
       <div class="chatinput">
-        <button class="chatclip" title="Attach files"><svg><use href="#i-clip"/></svg></button>
-        <input class="field" id="chatField" type="text" placeholder="Message ${cur.project}" />
-        <button class="chatsend" id="chatSend" title="Send"><svg><use href="#i-send"/></svg></button>
+        <div class="composer">
+          <div class="composer__atts" id="composerAtts">${state.composerAtts.map(attChipHTML).join('')}</div>
+          <textarea class="composer__field" id="chatField" rows="1" placeholder="Message ${cur.project}"></textarea>
+          <div class="composer__row">
+            <button class="chatclip" title="Attach files"><svg><use href="#i-clip"/></svg></button>
+            <div class="panel__hspacer"></div>
+            <button class="chatsend" id="chatSend" title="Send"><svg><use href="#i-send"/></svg></button>
+          </div>
+        </div>
       </div>
     </div>
     <div class="chat3d">
@@ -689,7 +761,8 @@ function openTagMenu(anchor) {
 let mediaTab = 'all';
 function renderMedia() {
   const cur = CHATS.find((c) => c.id === state.chat);
-  const atts = cur.msgs.filter((m) => m.att).map((m) => ({ ...m.att, time: m.time }));
+  const atts = cur.msgs.flatMap((m) =>
+    (m.atts || (m.att ? [m.att] : [])).map((a) => ({ ...a, time: m.time })));
   const shown = atts.filter((a) => mediaTab === 'all'
     || (mediaTab === 'photos' && a.kind === 'image')
     || (mediaTab === 'files' && a.kind === 'file')
@@ -706,11 +779,38 @@ function renderMedia() {
         <b>Nothing here yet</b><span>${mediaTab === 'videos' ? 'Videos' : 'Attachments'} from this chat will show up here</span></div>`;
 }
 
+/* attachments staged in the composer (prototype: the clip cycles demo files) */
+const DEMO_ATTS = [
+  { kind: 'file',  name: 'fixture_offsets_rev2.pdf', size: '96 KB' },
+  { kind: 'image', name: 'toolpath_check.png', size: '840 KB', art: 'impeller' },
+  { kind: 'file',  name: 'post_settings.json', size: '4 KB' },
+];
+function attChipHTML(a, i) {
+  return `<span class="cchip">
+    <span class="cchip__pic${a.kind === 'image' ? ' cchip__pic--img' : ''}">${a.kind === 'image'
+      ? partSVG(a.art || 'plate') : `<svg><use href="#i-file"/></svg>`}</span>
+    <span class="cchip__txt"><b>${a.name}</b><i>${a.size}</i></span>
+    <button class="cchip__x" data-attrm="${i}" title="Remove"><svg><use href="#i-close"/></svg></button>
+  </span>`;
+}
+function renderComposerAtts() {
+  const box = $('#composerAtts');
+  if (box) box.innerHTML = state.composerAtts.map(attChipHTML).join('');
+}
+function autosizeComposer() {
+  const f = $('#chatField');
+  if (!f) return;
+  f.style.height = 'auto';
+  f.style.height = Math.min(f.scrollHeight, 120) + 'px';
+}
 function sendChatMsg() {
   const f = $('#chatField');
   const text = (f?.value || '').trim();
-  if (!text) return;
-  CHATS.find((c) => c.id === state.chat).msgs.push({ from: 'me', text, time: 'Just now' });
+  const atts = state.composerAtts;
+  if (!text && !atts.length) return;
+  CHATS.find((c) => c.id === state.chat).msgs.push({
+    from: 'me', text, time: 'Just now', ...(atts.length ? { atts: [...atts] } : {}) });
+  state.composerAtts = [];
   renderBody();
   $('#chatField')?.focus();
 }
@@ -899,6 +999,27 @@ function openFilterMenu(id, anchor) {
   openMenuAt(menu, anchor);
 }
 
+/* narrow screens: the collection meta folds into an info popover
+   (mirrors the project page's "Last update" popover) */
+function openColInfo() {
+  const col = COLLECTIONS.find((c) => c.name === state.col);
+  if (!col) return;
+  const menu = $('#colInfoMenu');
+  const n = colProjects(state.col).length;
+  const initials = col.owner ? col.owner.split(' ').map((w) => w[0]).join('').slice(0, 2) : '';
+  menu.innerHTML = `
+    ${col.owner ? `<div class="colinfo__label">Owner</div>
+    <div class="colinfo__member">
+      <span class="avatar" style="--av:${col.color}">${initials}</span>
+      <span>${col.owner}</span>
+    </div>
+    <div class="hmenu__sep"></div>` : ''}
+    <div class="colinfo__row"><svg><use href="#i-folder"/></svg>${n} project${n === 1 ? '' : 's'}</div>
+    <div class="colinfo__row"><svg><use href="#i-clock"/></svg>Updated ${fmtUpd(col.upd)}</div>
+    <div class="colinfo__row"><svg><use href="#i-calendar"/></svg>Created ${fmtUpd(col.created)}</div>`;
+  openMenuAt(menu, $('#colInfoBtn'));
+}
+
 /* card "more" menu mirrors the project-page header menu (reference: Share /
    Duplicate to My Projects / Collections) */
 function openCardMenu(name, anchor) {
@@ -1023,6 +1144,13 @@ function init() {
 
   // filter chips
   $('#filters').addEventListener('click', (e) => {
+    if (e.target.closest('#fMore')) {
+      e.stopPropagation();
+      const menu = $('#morefMenu');
+      if (!menu.hidden) { menu.hidden = true; return; }
+      openMoreFilters();
+      return;
+    }
     const chip = e.target.closest('[data-filter]');
     if (!chip) return;
     e.stopPropagation();
@@ -1030,6 +1158,15 @@ function init() {
     if (!menu.hidden && menu.dataset.filter === chip.dataset.filter) { menu.hidden = true; return; }
     openFilterMenu(chip.dataset.filter, chip);
   });
+  // folded filters: a row in the More popover opens that filter's options
+  $('#morefMenu').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-mfilter]');
+    if (!b) return;
+    e.stopPropagation();
+    openFilterMenu(b.dataset.mfilter, $('#fMore'));
+  });
+  // refold the chips when the panel changes width
+  new ResizeObserver(() => layoutFilters()).observe($('#filters'));
   $('#filterMenu').addEventListener('click', (e) => {
     const b = e.target.closest('[data-opt]');
     if (!b) return;
@@ -1039,7 +1176,9 @@ function init() {
     if (f.multi) {
       const set = fstate[id];
       set.has(b.dataset.opt) ? set.delete(b.dataset.opt) : set.add(b.dataset.opt);
-      openFilterMenu(id, $(`[data-filter="${id}"]`) || $('#filters')); // re-render menu in place
+      // re-render the menu in place; the chip may be folded under "More"
+      const anchor = $(`#filters [data-filter="${id}"]:not([hidden])`) || $('#fMore') || $('#filters');
+      openFilterMenu(id, anchor);
     } else {
       fstate[id] = b.dataset.opt;
       closeMenus();
@@ -1083,6 +1222,19 @@ function init() {
       return;
     }
     if (e.target.closest('#chatSend')) { sendChatMsg(); return; }
+    if (e.target.closest('.chatclip')) {
+      // prototype: stage the next demo file instead of a real file picker
+      state.composerAtts.push(DEMO_ATTS[state.composerAtts.length % DEMO_ATTS.length]);
+      renderComposerAtts();
+      $('#chatField')?.focus();
+      return;
+    }
+    const attrm = e.target.closest('[data-attrm]');
+    if (attrm) {
+      state.composerAtts.splice(Number(attrm.dataset.attrm), 1);
+      renderComposerAtts();
+      return;
+    }
     const vsh = e.target.closest('[data-vshow]');
     if (vsh) {
       c3d.show[vsh.dataset.vshow] = !c3d.show[vsh.dataset.vshow];
@@ -1150,7 +1302,34 @@ function init() {
       return;
     }
     const card = e.target.closest('[data-open]');
-    if (card) location.href = 'index.html';
+    if (card) { location.href = 'index.html'; return; }
+    // a collection card opens its projects (star clicks are handled above)
+    const ccard = e.target.closest('[data-opencol]');
+    if (ccard) {
+      state.colFrom = state.scope;
+      state.scope = 'incol';
+      state.col = ccard.dataset.opencol;
+      state.q = '';
+      $('#searchField').value = '';
+      renderBody();
+    }
+  });
+
+  // in-collection head: the info button shows the folded meta on narrow screens
+  $('#colInfoBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    const menu = $('#colInfoMenu');
+    if (!menu.hidden) { menu.hidden = true; return; }
+    openColInfo();
+  });
+
+  // in-collection head: back returns to the collections listing it came from
+  $('#colBack').addEventListener('click', () => {
+    state.scope = state.colFrom || 'col-all';
+    state.q = '';
+    $('#searchField').value = '';
+    $$('.navitem').forEach((n) => n.classList.toggle('is-active', n.dataset.scope === state.scope));
+    renderBody();
   });
 
   // card menu actions: Duplicate is live (adds a copy to My projects), the
@@ -1190,9 +1369,15 @@ function init() {
     renderBody();
   });
 
-  // chat input: Enter sends
+  // chat input: Enter sends, Shift+Enter — newline; the textarea auto-grows
   $('#cloudsBody').addEventListener('keydown', (e) => {
-    if (e.target.id === 'chatField' && e.key === 'Enter') sendChatMsg();
+    if (e.target.id === 'chatField' && e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendChatMsg();
+    }
+  });
+  $('#cloudsBody').addEventListener('input', (e) => {
+    if (e.target.id === 'chatField') autosizeComposer();
   });
 
   // chat 3D: orbit (drag), zoom (wheel), display-filters popover, redraw on resize
