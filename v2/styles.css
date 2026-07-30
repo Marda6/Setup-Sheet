@@ -17,6 +17,8 @@
   --ec-fg-16:rgba(245,245,245,.16); --ec-fg-12:rgba(245,245,245,.12); --ec-fg-8:rgba(245,245,245,.08);
   --ec-fg-6:rgba(245,245,245,.06); --ec-fg-4:rgba(245,245,245,.04);
   --ec-green:#00a36d; --ec-green-08:rgba(0,163,109,.08); --ec-green-16:rgba(0,163,109,.16);
+  /* notification badges/dots: brighter than the accent so they pop on dark */
+  --ec-badge:#00cf8a;
   --ec-blue:#1269d9; --ec-blue-soft:#46acff; --ec-blue-tint:rgba(18,105,217,.18);
   --ec-amber:#ebc14a; --ec-sel:#ff8a4c;
   --op-yellow:#ebda84; --op-blue:#84c9eb; --op-coral:#ff7072; --op-green:#84ebb8; --op-violet:#9584eb;
@@ -42,6 +44,7 @@
   --ec-fg-16:rgba(22,25,27,.2); --ec-fg-12:rgba(22,25,27,.14); --ec-fg-8:rgba(22,25,27,.09);
   --ec-fg-6:rgba(22,25,27,.07); --ec-fg-4:rgba(22,25,27,.05);
   --operation-icon-fill:#4d5460; --operation-icon-accent:#e6e8ea;
+  --ec-badge:var(--ec-green); /* the accent reads fine on light backgrounds */
   --ec-shadow:0 12px 32px rgba(20,26,30,.2);
 }
 :root[data-theme="light"] .avatar--more { background:#dde0e2; color:var(--ec-fg-72); }
@@ -167,10 +170,10 @@ input { font-family:inherit; }
 .btn-primary:hover { background:#00b578; }
 .btn-primary svg { width:14px; height:14px; }
 .btn-secondary { display:inline-flex; align-items:center; gap:6px; height:24px; padding:0 10px;
-  border-radius:var(--ec-radius); background:var(--ec-fg-6); border:1px solid var(--border);
+  border-radius:var(--ec-radius); background:var(--ec-fg-12); border:1px solid var(--border);
   color:var(--ec-fg-100); font-size:12px; font-weight:400; white-space:nowrap;
   transition:background .12s; }
-.btn-secondary:hover { background:var(--ec-fg-12); }
+.btn-secondary:hover { background:var(--ec-fg-16); }
 .btn-secondary svg { width:14px; height:14px; color:var(--ec-fg-64); }
 /* square logo button — same hover as the other header icon buttons */
 .header__encybtn { display:grid; place-items:center; width:24px; height:24px; flex-shrink:0;
