@@ -110,22 +110,53 @@
 .clouds__title { margin-left:8px; font-size:13px; font-weight:500; color:var(--ec-fg-100);
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
+/* in-collection head: back button + colored "Collection" tag + owner/count/updated */
+.clouds__back { margin-left:4px; }
+.clouds__back + .clouds__title { margin-left:2px; }
+.coltag { display:inline-flex; align-items:center; height:18px; padding:0 6px; margin-left:8px;
+  border-radius:var(--ec-radius); background:var(--cc, var(--ec-fg-12));
+  color:rgba(10,12,12,.92); font-size:11px; font-weight:500; flex-shrink:0; }
+.clouds__sub { display:flex; align-items:center; gap:8px; margin-left:8px; font-size:11px;
+  color:var(--ec-fg-48); white-space:nowrap; overflow:hidden; flex-shrink:1; }
+.clouds__msep { width:1px; height:12px; background:var(--ec-fg-12); flex-shrink:0; }
+/* narrow screens: the meta folds into the info button with a popover */
+.clouds__info { display:none; }
+@media (max-width:1000px) {
+  .clouds__sub { display:none; }
+  .clouds__info:not([hidden]) { display:grid; }
+}
+.colinfo { padding:8px; min-width:200px; }
+.colinfo__label { padding:2px 4px 6px; font-size:11px; color:var(--ec-fg-48); }
+.colinfo__member { display:flex; align-items:center; gap:8px; padding:0 4px 8px;
+  font-size:12px; color:var(--ec-fg-96); }
+.colinfo__member .avatar { --av:#84c9eb; }
+.colinfo__row { display:flex; align-items:center; gap:8px; padding:5px 4px;
+  font-size:12px; color:var(--ec-fg-80); }
+.colinfo__row svg { width:14px; height:14px; color:var(--ec-fg-48); flex-shrink:0; }
+.colinfo .hmenu__sep { margin:0 0 6px; }
+
 .search { position:relative; width:220px; max-width:40vw; flex-shrink:1; }
 .search svg { position:absolute; left:7px; top:50%; transform:translateY(-50%);
   width:14px; height:14px; color:var(--ec-fg-48); pointer-events:none; }
 .search .field { padding-left:27px; }
 
-/* filter row: quiet select-chips; non-default filters get the green tint */
-.filters { display:flex; flex-wrap:wrap; gap:4px; padding:8px 12px; flex-shrink:0;
-  border-bottom:1px solid var(--divider); }
+/* filter row: quiet select-chips; non-default filters get the green tint;
+   a single row — overflowing chips fold under the "More · N" chip (layoutFilters) */
+.filters { display:flex; flex-wrap:nowrap; overflow:hidden; gap:4px; padding:8px 12px;
+  flex-shrink:0; border-bottom:1px solid var(--divider); }
 .fchip { display:inline-flex; align-items:center; gap:6px; height:24px; padding:0 8px;
   border-radius:var(--ec-radius); background:var(--ec-fg-4); border:1px solid transparent;
-  font-size:12px; color:var(--ec-fg-80); white-space:nowrap; transition:border-color .12s,color .12s; }
+  font-size:12px; color:var(--ec-fg-80); white-space:nowrap; flex-shrink:0;
+  transition:border-color .12s,color .12s; }
 .fchip:hover { border-color:var(--ec-fg-16); color:var(--ec-fg-100); }
 .fchip.is-active { background:var(--ec-green-08); border-color:var(--ec-green); color:var(--ec-fg-100); }
 .fchip svg { width:13px; height:13px; color:var(--ec-fg-48); flex-shrink:0; }
 .fchip.is-active svg { color:var(--ec-green); }
-.filters .field { width:128px; }
+.filters .field { width:128px; flex-shrink:0; }
+
+/* the More popover: folded filters as menu rows; the model input keeps its field */
+.hmenu__inp { padding:2px 4px; }
+.hmenu__inp .field { width:160px; }
 
 /* filter/sort menus reuse .hmenu; checked rows get the check icon slot */
 .hmenu .ck { width:15px; height:15px; visibility:hidden; }
@@ -179,9 +210,11 @@
 :root[data-theme="light"] .pcard:hover { background:var(--ec-fg-8); }
 :root[data-theme="light"] .pcard__thumb,
 :root[data-theme="light"] .prow__thumb,
+:root[data-theme="light"] .cchip__pic--img,
 :root[data-theme="light"] .chatitem__thumb { background:#fff; }
 :root[data-theme="light"] .pcard__thumb .part,
 :root[data-theme="light"] .prow__thumb .part,
+:root[data-theme="light"] .cchip__pic--img .part,
 :root[data-theme="light"] .chatitem__thumb .part { filter:brightness(.82); }
 
 /* ---- list view: rows keep the part preview ---- */
@@ -215,7 +248,7 @@
   gap:8px; padding:12px; }
 .ccard { --cc:#84c9eb; --ink:rgba(10,12,12,.92); --ink-soft:rgba(10,12,12,.6);
   padding:12px; border-radius:var(--ec-radius-md); background:var(--cc);
-  transition:filter .12s; }
+  transition:filter .12s; cursor:pointer; }
 .ccard:hover { filter:brightness(1.05); }
 .ccard__head { display:flex; align-items:center; gap:8px; }
 .ccard__name { flex:1; min-width:0; font-size:13px; font-weight:600; color:var(--ink);
@@ -335,12 +368,42 @@ button.setrow:hover { background:var(--ec-fg-6); }
 .chatinput { display:flex; align-items:center; gap:6px;
   padding:8px max(12px, calc((100% - var(--chat-col)) / 2));
   border-top:1px solid var(--divider); flex-shrink:0; }
-.chatinput .field { flex:1; }
-.chatsend { display:grid; place-items:center; width:24px; height:24px; flex-shrink:0;
+/* the composer is the chat's primary control: a wide bordered box —
+   staged attachments as chips on top, multiline field, actions row below */
+.composer { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px;
+  padding:6px; border-radius:var(--ec-radius-md);
+  background:var(--ec-fg-6); border:1px solid var(--ec-fg-12); }
+.composer:focus-within { border-color:var(--ec-fg-24); }
+.composer__atts { display:flex; flex-wrap:wrap; gap:6px; padding:2px 2px 4px; }
+.composer__atts:empty { display:none; }
+.composer__field { display:block; width:100%; border:0; background:none; resize:none;
+  padding:4px 6px; min-height:24px; max-height:120px; overflow-y:auto;
+  font:inherit; font-size:12px; line-height:16px; color:var(--ec-fg-100); }
+.composer__field:focus { outline:none; }
+.composer__field::placeholder { color:var(--ec-fg-48); }
+.composer__row { display:flex; align-items:center; gap:6px; }
+
+/* staged attachment chip */
+.cchip { display:inline-flex; align-items:center; gap:6px; padding:2px 4px 2px 2px;
+  border-radius:var(--ec-radius); background:var(--ec-fg-8); max-width:220px; }
+.cchip__pic { display:grid; place-items:center; width:24px; height:24px; flex-shrink:0;
+  border-radius:3px; background:var(--ec-fg-8); color:var(--ec-fg-56); }
+.cchip__pic svg { width:13px; height:13px; }
+.cchip__pic--img { background:#0b0d0e; overflow:hidden; }
+.cchip__pic--img .part { width:100%; height:100%; object-fit:cover; }
+.cchip__txt { min-width:0; }
+.cchip__txt b { display:block; font-size:11px; font-weight:500; color:var(--ec-fg-96);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cchip__txt i { display:block; font-size:10px; font-style:normal; color:var(--ec-fg-48); }
+.cchip__x { display:grid; place-items:center; width:16px; height:16px; flex-shrink:0;
+  border-radius:3px; color:var(--ec-fg-48); }
+.cchip__x:hover { background:var(--ec-fg-8); color:var(--ec-fg-100); }
+.cchip__x svg { width:10px; height:10px; }
+.chatsend { display:grid; place-items:center; width:28px; height:28px; flex-shrink:0;
   border-radius:var(--ec-radius); background:var(--ec-green); color:#04150e;
   transition:filter .12s; }
 .chatsend:hover { filter:brightness(1.1); }
-.chatsend svg { width:14px; height:14px; }
+.chatsend svg { width:15px; height:15px; }
 
 /* tools row above the thread: tag filter left, media & files right */
 .chatview__tools { display:flex; align-items:center; gap:4px; padding:6px 8px;
@@ -367,11 +430,11 @@ button.setrow:hover { background:var(--ec-fg-6); }
 .msg__tags { display:flex; flex-wrap:wrap; gap:4px; margin-top:4px; }
 .msg__tags span { font-size:11px; color:var(--ec-green); }
 
-/* attach button in the input row */
-.chatclip { display:grid; place-items:center; width:24px; height:24px; flex-shrink:0;
+/* attach button in the input row (28px next to the 32px composer) */
+.chatclip { display:grid; place-items:center; width:28px; height:28px; flex-shrink:0;
   border-radius:var(--ec-radius); color:var(--ec-fg-56); transition:background .12s,color .12s; }
 .chatclip:hover { background:var(--ec-fg-8); color:var(--ec-fg-100); }
-.chatclip svg { width:15px; height:15px; }
+.chatclip svg { width:16px; height:16px; }
 
 /* chats scope: the search moves next to the title (the head's right side is empty) */
 .clouds__head--chats .panel__hspacer { order:1; }
