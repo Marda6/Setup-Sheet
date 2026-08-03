@@ -48,6 +48,10 @@
   --ec-shadow:0 12px 32px rgba(20,26,30,.2);
 }
 :root[data-theme="light"] .avatar--more { background:#dde0e2; color:var(--ec-fg-72); }
+/* on light, the grey card-2 plate reads dirty — header and every panel sit on
+   the white card, and the page background alone separates them */
+:root[data-theme="light"] .header,
+:root[data-theme="light"] .panel { background:var(--ec-card); }
 
 * { box-sizing:border-box; margin:0; padding:0; }
 html,body { height:100%; }
@@ -177,7 +181,7 @@ input { font-family:inherit; }
 .btn-secondary svg { width:14px; height:14px; color:var(--ec-fg-64); }
 /* square logo button — same hover as the other header icon buttons */
 .header__encybtn { display:grid; place-items:center; width:24px; height:24px; flex-shrink:0;
-  border-radius:var(--ec-radius); transition:background .12s; }
+  color:var(--ec-green); border-radius:var(--ec-radius); transition:background .12s; }
 .header__encybtn:hover { background:var(--ec-fg-8); }
 .header__encybtn svg { width:24px; height:24px; }
 
@@ -240,8 +244,12 @@ input { font-family:inherit; }
 .statsmenu__preset { display:flex; align-items:center; gap:8px; width:100%; height:28px; padding:0 8px;
   border-radius:var(--ec-radius); font-size:12px; color:var(--ec-fg-80); }
 .statsmenu__preset:hover { background:var(--ec-fg-8); color:var(--ec-fg-100); }
-.statsmenu__preset.is-active { background:var(--ec-green-08); color:var(--ec-fg-100); }
-.statsmenu__preset.is-active svg { color:var(--ec-green); }
+/* the picked preset inverts — solid accent, white text — so it reads as the
+   current state, not as a hover */
+.statsmenu__preset.is-active { background:var(--ec-green); color:#fff; font-weight:500; }
+.statsmenu__preset.is-active:hover { background:color-mix(in srgb, #fff 12%, var(--ec-green)); color:#fff; }
+.statsmenu__preset.is-active svg { color:#fff; }
+.statsmenu__preset.is-active .statsmenu__sub { color:rgba(255,255,255,.72); }
 .statsmenu__preset svg { width:14px; height:14px; color:var(--ec-fg-56); }
 .statsmenu__sub { margin-left:auto; padding-left:8px; font-size:10px; color:var(--ec-fg-32); white-space:nowrap; }
 .statsmenu__preset + .statsmenu__preset { margin-top:2px; }
@@ -249,7 +257,10 @@ input { font-family:inherit; }
 .chip { height:24px; padding:0 8px; border-radius:var(--ec-radius); border:1px solid var(--border);
   background:var(--ec-fg-4); font-size:11px; color:var(--ec-fg-72); transition:background .12s,color .12s; }
 .chip:hover { background:var(--ec-fg-8); color:var(--ec-fg-100); }
-.chip.is-active { background:var(--ec-green-16); border-color:var(--ec-green); color:var(--ec-fg-100); }
+/* selected chips are a state, not a hint — fill them so the set of picked
+   stats reads at a glance instead of as a tinted outline */
+.chip.is-active { background:var(--ec-green); border-color:var(--ec-green); color:#fff; font-weight:500; }
+.chip.is-active:hover { background:color-mix(in srgb, #fff 12%, var(--ec-green)); color:#fff; }
 .statsmenu__hint { margin:8px 4px 0; font-size:11px; line-height:14px; color:var(--ec-fg-48); }
 
 /* collapse button (narrow, left of the combobox); hover = icon brightness only */
@@ -356,6 +367,15 @@ input { font-family:inherit; }
   border:1px solid var(--border); background:#0b0d0e; aspect-ratio:16/10; }
 .preview img { width:100%; height:100%; object-fit:cover; display:block; }
 
+/* Setup view: on a wide panel the setup preview docks BESIDE the fields
+   instead of below them (container query — panel width, not window width) */
+.acc--wp { container-type:inline-size; }
+@container (min-width: 760px) {
+  .acc__body--wp { display:flex; gap:12px; align-items:flex-start; }
+  .acc__body--wp .acc__kvs { flex:1; min-width:0; }
+  .acc__body--wp .preview { margin-top:2px; flex:0 0 300px; }
+}
+
 .issue { display:flex; align-items:center; gap:8px; padding:8px; border:1px solid var(--border);
   border-radius:var(--ec-radius); }
 .issue svg { width:16px; height:16px; color:var(--ec-amber); flex-shrink:0; }
@@ -386,7 +406,9 @@ input { font-family:inherit; }
 .op-row:hover { background:var(--ec-fg-4); }
 .op-row.is-selected { background:var(--ec-fg-8); }
 .op-row__ico { width:16px; height:16px; flex-shrink:0; }
-.op-row__name { flex:1; min-width:0; font-size:12px; color:var(--ec-fg-80);
+/* the name is a capped column, not a spring: stat columns line up right after
+   it on every row instead of drifting to the panel's far edge when it is wide */
+.op-row__name { flex:0 1 240px; min-width:0; font-size:12px; color:var(--ec-fg-80);
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .op-row:hover .op-row__name, .op-row.is-selected .op-row__name { color:var(--ec-fg-100); }
 .op-row__time { width:40px; flex-shrink:0; text-align:right; font-size:11px; color:var(--ec-fg-48);
@@ -499,7 +521,9 @@ input { font-family:inherit; }
 .seg button { height:20px; min-width:36px; padding:0 8px; border-radius:2px;
   font-size:11px; font-weight:500; color:var(--ec-fg-56); transition:background .12s,color .12s; }
 .seg button:hover { color:var(--ec-fg-100); }
-.seg button.is-active { background:var(--ec-fg-12); color:var(--ec-green); }
+/* same inversion as the stats menu: the picked segment is solid accent */
+.seg button.is-active { background:var(--ec-green); color:#fff; font-weight:500; }
+.seg button.is-active:hover { background:color-mix(in srgb, #fff 12%, var(--ec-green)); color:#fff; }
 .tool__holder { height:24px; padding:0 12px; border-radius:var(--ec-radius);
   background:var(--ec-fg-4); font-size:11px; font-weight:500; color:var(--ec-fg-56); }
 .tool__holder:disabled { opacity:.45; cursor:default; }
