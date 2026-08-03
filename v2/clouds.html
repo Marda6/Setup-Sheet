@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Clouds v2 · ENCY Core</title>
+  <!-- theme bootstrap before CSS so there is no flash of the wrong theme -->
+  <script>(function () {
+    var p = localStorage.getItem('ency-theme');
+    document.documentElement.dataset.theme = p === 'light' || p === 'dark' ? p
+      : (p === 'system' && matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+  })();</script>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="clouds.css" />
+</head>
+<body>
+
+<!-- ===================== ICON SPRITE (shared subset + clouds-specific) ===================== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></symbol>
+  <symbol id="i-chevdown" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l4 4 12-11"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 11.2v5"/><path d="M12 7.8h.01"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="15" rx="2"/><path d="M8 3v5M16 3v5M4 11h16"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-12.3 7.6L4 21l1.9-4.7A8.5 8.5 0 1 1 21 11.5z"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8.5a6 6 0 0 0-12 0c0 6.5-2.5 8-2.5 8h17s-2.5-1.5-2.5-8"/><path d="M10.3 20a2 2 0 0 0 3.4 0"/></symbol>
+  <symbol id="i-grid-view" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></symbol>
+  <symbol id="i-rows" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5h16M4 12h16M4 17.5h16"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7A1.5 1.5 0 0 1 5 5.5h4L11 8h8a1.5 1.5 0 0 1 1.5 1.5V18a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 18z"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0M16 6.5a3 3 0 0 1 0 6M21 19a5 5 0 0 0-3.5-4.8"/></symbol>
+  <symbol id="i-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 4H6.5A1.5 1.5 0 0 0 5 5.5v13A1.5 1.5 0 0 0 6.5 20H13"/><path d="M17 8l4 4-4 4M21 12H10"/></symbol>
+  <symbol id="i-cube" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3zM12 3v18M4 7.5l8 4.5 8-4.5"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="19" cy="12" r="1.5" fill="currentColor"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5.5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="18.5" r="2.5"/><path d="M8.2 10.8l7.6-4.1M8.2 13.2l7.6 4.1"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v10m0 0l-4-4m4 4l4-4M5 19h14"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="1.5"/><path d="M6.5 15h-1A1.5 1.5 0 0 1 4 13.5v-8A1.5 1.5 0 0 1 5.5 4h8A1.5 1.5 0 0 1 15 5.5v1"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></symbol>
+  <symbol id="i-panel-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><path d="M14.5 4.5v15"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="2.5"/></symbol>
+  <symbol id="i-ruler" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="7" width="19" height="10" rx="1.5"/><path d="M7 7v3M11 7v4M15 7v3M19 7v4"/></symbol>
+  <symbol id="i-measure" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15.5L15.5 3l5.5 5.5L8.5 21z"/><path d="M7.5 12l2 2M11 8.5l2 2M14.5 5l2 2"/></symbol>
+  <symbol id="i-part" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/><circle cx="12" cy="12" r="3.2"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5 9-5zM3 13l9 5 9-5M3 16.5l9 5 9-5"/></symbol>
+  <symbol id="i-context" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2.2 2.6"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3zM12 3v18M4 7.5l8 4.5 8-4.5"/></symbol>
+  <symbol id="i-machine" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 20.5h17"/><path d="M5.5 20.5v-15h13v15"/><path d="M9.5 5.5v5.5h5V5.5"/><path d="M12 11v3.5"/></symbol>
+  <symbol id="i-toolbit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3h4v9l-2 3-2-3z"/><path d="M12 15v6"/></symbol>
+  <symbol id="i-holder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3.5h4V7h3.5L13 20.5h-2L6.5 7H10V3.5z"/></symbol>
+  <symbol id="i-mesh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8c4 3 12 3 16 0M4 12c4 3 12 3 16 0M4 16c4 3 12 3 16 0"/></symbol>
+  <symbol id="i-normals" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17.5h16"/><path d="M12 17.5V7"/><path d="M8.5 10.5L12 7l3.5 3.5"/></symbol>
+  <symbol id="i-points" viewBox="0 0 24 24" fill="currentColor"><circle cx="5.5" cy="17.5" r="1.5"/><circle cx="10" cy="12.5" r="1.5"/><circle cx="15" cy="9" r="1.5"/><circle cx="19.5" cy="6" r="1.5"/></symbol>
+  <symbol id="i-axes" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19V5M5 19h14M5 9l-2 2M5 5l-2 2M19 19l2-2M15 19l2 2"/></symbol>
+  <symbol id="i-clip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5l-7.8 7.8a5 5 0 0 1-7-7L13 4.5a3.3 3.3 0 0 1 4.7 4.7l-7.6 7.6a1.7 1.7 0 0 1-2.4-2.4l7-7"/></symbol>
+  <symbol id="i-tag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12V5A1.5 1.5 0 0 1 5 3.5h7L20.5 12 12 20.5 3.5 12z"/><circle cx="8" cy="8" r="1.4"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><circle cx="9" cy="10" r="1.6"/><path d="M20.5 15.5l-4.5-4.5-9 8.5"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h8l4 4v14H6V3z"/><path d="M14 3v4h4"/></symbol>
+  <symbol id="i-expand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 3.5L3.5 10.2l6.5 3.8 3.8 6.5z"/><path d="M20.5 3.5L10 14"/></symbol>
+  <symbol id="i-scan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M18.7 5.3l-1.4 1.4M6.7 17.3l-1.4 1.4"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/></symbol>
+  <symbol id="i-monitor" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="12.5" rx="1.5"/><path d="M9 20.5h6M12 17v3.5"/></symbol>
+
+  <!-- clouds-specific (candidates for Core) -->
+  <symbol id="i-star" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8L3.5 9.7l5.9-.9z"/></symbol>
+  <symbol id="i-star-fill" viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8L3.5 9.7l5.9-.9z" fill="currentColor"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.4 2.3 3.7 5.2 3.7 8.5s-1.3 6.2-3.7 8.5c-2.4-2.3-3.7-5.2-3.7-8.5s1.3-6.2 3.7-8.5z"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></symbol>
+  <symbol id="i-archive" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="4.5" rx="1"/><path d="M5.5 9v9A1.5 1.5 0 0 0 7 19.5h10a1.5 1.5 0 0 0 1.5-1.5V9M10 13h4"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="3" width="10" height="18" rx="2"/><path d="M11 17.5h2"/></symbol>
+  <symbol id="i-sort" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5v14M8 19l-3-3M8 19l3-3M16 19V5M16 5l-3 3M16 5l3 3"/></symbol>
+  <symbol id="i-panel-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><path d="M9.5 4.5v15"/></symbol>
+  <!-- ENCY logo (brand) -->
+  <symbol id="i-ency" viewBox="0 0 24 24" fill="none">
+    <path d="M10.5938 18.0938H7.89844C6.79818 18.0938 5.90625 17.2018 5.90625 16.1016C5.90625 15.0013 6.79818 14.1094 7.89844 14.1094H10.5938C10.9821 14.1094 11.2969 13.7946 11.2969 13.4062C11.2969 13.0179 10.9821 12.7031 10.5938 12.7031H7.89844C6.02153 12.7031 4.5 14.2247 4.5 16.1016C4.5 17.9785 6.02153 19.5 7.89844 19.5H10.5938C10.9821 19.5 11.2969 19.1852 11.2969 18.7969C11.2969 18.4085 10.9821 18.0938 10.5938 18.0938Z" fill="currentColor"/>
+    <path d="M14.1094 10.5937L14.1094 7.89844C14.1094 6.79818 15.0013 5.90625 16.1016 5.90625C17.2018 5.90625 18.0937 6.79818 18.0937 7.89844L18.0937 10.5937C18.0937 10.9821 18.4085 11.2969 18.7969 11.2969C19.1852 11.2969 19.5 10.9821 19.5 10.5938L19.5 7.89844C19.5 6.02153 17.9785 4.5 16.1016 4.5C14.2247 4.5 12.7031 6.02153 12.7031 7.89844L12.7031 10.5937C12.7031 10.9821 13.0179 11.2969 13.4062 11.2969C13.7946 11.2969 14.1094 10.9821 14.1094 10.5937Z" fill="currentColor"/>
+    <path d="M18.0938 13.4062L18.0938 16.1016C18.0938 17.2018 17.2018 18.0937 16.1016 18.0937L13.4063 18.0937C13.0179 18.0937 12.7031 18.4085 12.7031 18.7969C12.7031 19.1852 13.0179 19.5 13.4063 19.5L16.1016 19.5C17.9785 19.5 19.5 17.9785 19.5 16.1016L19.5 13.4062C19.5 13.0179 19.1852 12.7031 18.7969 12.7031C18.4086 12.7031 18.0938 13.0179 18.0938 13.4062Z" fill="currentColor"/>
+    <path d="M13.4064 12.7031C13.018 12.7031 12.7031 13.018 12.7031 13.4064C12.7031 13.6006 12.7818 13.7764 12.9091 13.9037L15.6041 16.5987C15.7314 16.726 15.9072 16.8047 16.1014 16.8047C16.4898 16.8047 16.8047 16.4898 16.8047 16.1014C16.8047 15.9072 16.726 15.7314 16.5987 15.6041L13.9037 12.9091C13.7764 12.7818 13.6006 12.7031 13.4064 12.7031Z" fill="currentColor"/>
+    <path d="M10.5938 9.89062H7.89844C6.79818 9.89062 5.90625 8.99869 5.90625 7.89844C5.90625 6.79818 6.79818 5.90625 7.89844 5.90625H9.59938L8.22071 7.28493C8.09346 7.41217 8.01476 7.58795 8.01476 7.78211C8.01476 8.17044 8.32956 8.48524 8.71789 8.48524C8.91205 8.48524 9.08783 8.40654 9.21507 8.2793L11.0909 6.40343C11.2182 6.27619 11.2969 6.10041 11.2969 5.90625V5.20312C11.2969 4.8148 10.9821 4.5 10.5938 4.5H7.89844C6.02153 4.5 4.5 6.02153 4.5 7.89844C4.5 9.77534 6.02153 11.2969 7.89844 11.2969H10.5938C10.9821 11.2969 11.2969 10.9821 11.2969 10.5937C11.2969 10.2054 10.9821 9.89062 10.5938 9.89062Z" fill="currentColor"/>
+  </symbol>
+</svg>
+
+<div class="app">
+  <div class="main main--clouds">
+
+    <!-- ===================== SIDEBAR ===================== -->
+    <aside class="panel nav" id="nav">
+      <header class="nav__head">
+        <svg class="nav__logo"><use href="#i-ency"/></svg>
+        <div class="nav__title">ENCY Clouds</div>
+        <div class="nav__spacer"></div>
+        <button class="header__iconbtn nav__bell" title="Notifications"><svg><use href="#i-bell"/></svg></button>
+        <button class="header__iconbtn" id="navCollapse" title="Collapse sidebar"><svg><use href="#i-panel-left"/></svg></button>
+      </header>
+      <div class="nav__body" id="navBody">
+        <button class="navitem" data-scope="chats" title="Chats"><svg><use href="#i-chat"/></svg><span>Chats</span><i class="navitem__count">5</i></button>
+        <div class="nav__label">Projects</div>
+        <button class="navitem is-active" data-scope="all" title="All projects"><svg><use href="#i-grid-view"/></svg><span>All projects</span><i class="navitem__count">597</i></button>
+        <button class="navitem" data-scope="my" title="My projects"><svg><use href="#i-user"/></svg><span>My projects</span><i class="navitem__count">5</i></button>
+        <button class="navitem" data-scope="shared" title="Shared with me"><svg><use href="#i-users"/></svg><span>Shared with me</span><i class="navitem__count">1</i></button>
+        <button class="navitem" data-scope="archive" title="Archive"><svg><use href="#i-archive"/></svg><span>Archive</span><i class="navitem__count">0</i></button>
+        <button class="navitem" data-scope="starred" title="Starred projects"><svg><use href="#i-star"/></svg><span>Starred projects</span><i class="navitem__count">3</i></button>
+        <div class="nav__label">Collections</div>
+        <button class="navitem" data-scope="col-all" title="All collections"><svg><use href="#i-folder"/></svg><span>All collections</span><i class="navitem__count">9</i></button>
+        <button class="navitem" data-scope="col-my" title="My collections"><svg><use href="#i-folder"/></svg><span>My collections</span><i class="navitem__count">0</i></button>
+        <button class="navitem" data-scope="col-starred" title="Starred collections"><svg><use href="#i-star"/></svg><span>Starred collections</span><i class="navitem__count">0</i></button>
+        <div class="nav__sep"></div>
+        <button class="navitem" data-scope="mobile" title="Mobile app"><svg><use href="#i-phone"/></svg><span>Mobile app</span></button>
+      </div>
+      <footer class="nav__foot">
+        <button class="userbtn" id="userBtn" title="Account">
+          <span class="avatar" style="--av:#84ebb8">RM</span>
+          <span class="userbtn__mail">ruslan.m@encycam.io</span>
+          <svg class="chev"><use href="#i-chev"/></svg>
+        </button>
+      </footer>
+      <!-- account menu -->
+      <div class="hmenu" id="userMenu" hidden>
+        <button data-uact="settings"><svg><use href="#i-user"/></svg>Account settings</button>
+        <div class="hmenu__sep"></div>
+        <button class="is-danger" data-uact="logout"><svg><use href="#i-logout"/></svg>Log out</button>
+      </div>
+    </aside>
+
+    <!-- ===================== INBOX (opens from the bell) ===================== -->
+    <aside class="panel inbox" id="inbox" hidden>
+      <header class="panel__head inbox__head">
+        <div class="inbox__title">Inbox</div>
+        <div class="panel__hspacer"></div>
+        <button class="header__iconbtn" id="inboxClose" title="Close"><svg><use href="#i-close"/></svg></button>
+      </header>
+      <div class="inbox__tabs">
+        <div class="seg">
+          <button data-itab="ntf" class="is-active">Notifications<i class="seg__cnt" id="cntNtf"></i></button>
+          <button data-itab="inv">Invites<i class="seg__cnt" id="cntInv"></i></button>
+        </div>
+      </div>
+      <div class="panel__body inbox__body" id="inboxBody"></div>
+    </aside>
+
+    <!-- ===================== CONTENT ===================== -->
+    <section class="panel clouds">
+      <header class="panel__head clouds__head">
+        <button class="header__iconbtn clouds__back" id="colBack" hidden title="Back to collections"><svg><use href="#i-back"/></svg></button>
+        <div class="clouds__title" id="cloudsTitle">All projects</div>
+        <span class="coltag" id="colTag" hidden>Collection</span>
+        <span class="clouds__sub" id="cloudsSub" hidden></span>
+        <button class="header__iconbtn clouds__info" id="colInfoBtn" hidden title="Collection info"><svg><use href="#i-info"/></svg></button>
+        <div class="panel__hspacer"></div>
+        <div class="search">
+          <svg><use href="#i-search"/></svg>
+          <input class="field" id="searchField" type="text" placeholder="Search a project" />
+        </div>
+        <span class="panel__sep"></span>
+        <button class="header__iconbtn" id="chat3dBtn" hidden title="3D view"><svg><use href="#i-panel-right"/></svg></button>
+        <div class="panel__mode" id="viewMode">
+          <button data-mode="list" title="List view"><svg><use href="#i-rows"/></svg></button>
+          <button data-mode="grid" class="is-active" title="Grid view"><svg><use href="#i-grid-view"/></svg></button>
+        </div>
+        <button class="panel__settings" id="sortBtn" title="Sort"><svg><use href="#i-sort"/></svg></button>
+        <div class="hmenu" id="sortMenu" hidden></div>
+      </header>
+      <div class="filters" id="filters"></div>
+      <div class="panel__body clouds__body" id="cloudsBody"></div>
+      <div class="hmenu" id="filterMenu" hidden></div>
+      <div class="hmenu" id="morefMenu" hidden></div>
+      <div class="hmenu colinfo" id="colInfoMenu" hidden></div>
+      <div class="hmenu" id="cardMenu" hidden></div>
+      <div class="hmenu" id="langMenu" hidden></div>
+      <div class="hmenu" id="tagMenu" hidden></div>
+      <div class="hmenu" id="c3dMenu" hidden></div>
+      <!-- media & files quick view -->
+      <div class="modal" id="mediaModal" hidden>
+        <div class="modal__card">
+          <div class="modal__head">
+            <b>Media &amp; files</b><span class="modal__cnt" id="mediaCnt"></span>
+            <div class="panel__hspacer"></div>
+            <button class="header__iconbtn" id="mediaClose" title="Close"><svg><use href="#i-close"/></svg></button>
+          </div>
+          <div class="inbox__filters" id="mediaTabs"></div>
+          <div class="modal__body" id="mediaBody"></div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<script src="clouds.js"></script>
+</body>
+</html>
