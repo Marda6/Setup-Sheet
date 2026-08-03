@@ -12,7 +12,7 @@
 .nav { width:232px; flex-shrink:0; }
 .nav__head { display:flex; align-items:center; gap:6px; height:36px; flex-shrink:0;
   padding:0 6px 0 10px; border-bottom:1px solid var(--divider); }
-.nav__logo { width:24px; height:24px; flex-shrink:0; }
+.nav__logo { width:24px; height:24px; flex-shrink:0; color:var(--ec-green); }
 .nav__title { font-size:13px; font-weight:500; color:var(--ec-fg-100); white-space:nowrap;
   overflow:hidden; text-overflow:ellipsis; }
 .nav__spacer { flex:1; }
@@ -66,8 +66,10 @@
 .inbox__tabs { flex-shrink:0; padding:8px 8px 0; }
 .inbox__tabs .seg { width:100%; }
 .inbox__tabs .seg button { flex:1; height:24px; }
-/* tabs are navigation, not a mode: the active one reads white, not green */
-.inbox__tabs .seg button.is-active { color:var(--ec-fg-100); }
+/* tabs are navigation, not a mode: the active one stays a neutral plate
+   instead of the accent fill the mode segments use */
+.inbox__tabs .seg button.is-active,
+.inbox__tabs .seg button.is-active:hover { background:var(--ec-fg-12); color:var(--ec-fg-100); }
 /* unread count: a quiet number like the sidebar counters */
 .seg__cnt { font-style:normal; margin-left:6px; font-size:11px; color:var(--ec-fg-48);
   font-variant-numeric:tabular-nums; }
@@ -319,7 +321,9 @@ button.setrow:hover { background:var(--ec-fg-6); }
 .setcard__seg button { flex:1; height:26px; display:inline-flex; align-items:center;
   justify-content:center; gap:6px; }
 .setcard__seg button svg { width:13px; height:13px; }
-.setcard__seg button.is-active { color:var(--ec-fg-100); }
+/* accent fill — the label and icon invert to white */
+.setcard__seg button.is-active { color:#fff; }
+.setcard__seg button.is-active svg { color:#fff; }
 
 /* ---- chats: list column + conversation ---- */
 .clouds__body--chats { overflow:hidden; display:flex; }

@@ -498,12 +498,14 @@ function selectTool(tno) {
 /* workpiece setup per setup: material, part zero, stock, fixture + preview */
 function renderSetupView() {
   return `<div class="overview">${SETUPS.map((s) => `
-    <div class="acc">
+    <div class="acc acc--wp">
       <div class="acc__head">${s.name}<span class="chev">${icon('i-chevdown')}</span></div>
-      <div class="acc__body">
-        ${kvRow('Part zero', `<span class="coord"><b>X</b>${s.wp.x}</span><span class="coord"><b>Y</b>${s.wp.y}</span><span class="coord"><b>Z</b>${s.wp.z}</span>`)}
-        ${kvRow('Stock', valueTag(s.wp.stock))}
-        ${kvRow('Fixture', `<button class="linklike">${s.wp.fixture}</button>`)}
+      <div class="acc__body acc__body--wp">
+        <div class="acc__kvs">
+          ${kvRow('Part zero', `<span class="coord"><b>X</b>${s.wp.x}</span><span class="coord"><b>Y</b>${s.wp.y}</span><span class="coord"><b>Z</b>${s.wp.z}</span>`)}
+          ${kvRow('Stock', valueTag(s.wp.stock))}
+          ${kvRow('Fixture', `<button class="linklike">${s.wp.fixture}</button>`)}
+        </div>
         <div class="preview"><div class="ghost">3D view</div></div>
       </div>
     </div>`).join('')}</div>`;
