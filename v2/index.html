@@ -146,6 +146,7 @@
       <span class="avatar" style="--av:#84ebb8">RM</span>
       <span class="avatar avatar--more">+1</span>
     </button>
+    <button class="btn-primary header__cl" id="clBtn" title="Setup checklist"><svg><use href="#i-check"/></svg><span class="header__cl-word">Setup checklist</span><span class="header__cl-num" id="clBtnNum"></span></button>
     <button class="btn-secondary"><svg><use href="#i-share"/></svg>Share</button>
     <button class="btn-secondary"><svg><use href="#i-download"/></svg>Download</button>
     <button class="header__encybtn" title="Open in ENCY"><svg><use href="#i-ency"/></svg></button>
@@ -245,6 +246,21 @@
         <div class="panel__body"><div class="ghost"></div></div>
       </section>
     </div>
+  </div>
+  <!-- checklist mode: a fixed two-panel layout replacing the workspace -->
+  <div class="clmode" id="clMode">
+    <section class="panel clmode__ov">
+      <header class="panel__head"><div class="clmode__title">Overview</div></header>
+      <div class="panel__body" id="clOverviewBody"></div>
+    </section>
+    <section class="panel clmode__list">
+      <header class="panel__head">
+        <div class="clmode__title">Setup checklist</div>
+        <div class="panel__hspacer"></div>
+        <button class="header__iconbtn" id="clClose" title="Exit checklist"><svg><use href="#i-close"/></svg></button>
+      </header>
+      <div class="panel__body" id="clListBody"></div>
+    </section>
   </div>
 </div>
 

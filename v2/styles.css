@@ -589,6 +589,84 @@ input { font-family:inherit; }
 .viewer__time { flex-shrink:0; padding:0 6px 0 2px; font-size:11px; color:var(--ec-fg-64);
   font-variant-numeric:tabular-nums; white-space:nowrap; }
 
+/* ====================================================== SETUP CHECKLIST === */
+/* a separate MODE, not a panel view: the workspace is swapped for a fixed
+   two-panel layout — Overview (reference) on the left, the checklist right */
+.header__cl-num { font-variant-numeric:tabular-nums; opacity:.75; }
+.header__cl-num:empty { display:none; }
+.header__cl.is-active { filter:brightness(1.15); }
+
+.clmode { display:none; }
+body.is-clmode .main { display:none; }
+body.is-clmode .clmode { flex:1; min-height:0; display:flex; gap:10px; padding:10px; }
+.clmode__ov { flex:1.2; min-width:0; }
+.clmode__list { flex:1; min-width:0; }
+.clmode__title { padding-left:8px; font-size:12px; font-weight:500; color:var(--ec-fg-100); }
+
+/* deliberate density exception below: the checklist is read at the machine,
+   often on touch — rows are taller than the 24px app standard */
+
+.cl { padding:0 8px 12px; }
+.cl__progress { position:sticky; top:0; z-index:2; display:flex; align-items:center;
+  gap:10px; padding:10px 4px; background:var(--ec-card-2); }
+.cl__bar { flex:1; height:4px; border-radius:999px; background:var(--ec-fg-8); overflow:hidden; }
+.cl__fill { height:100%; border-radius:999px; background:var(--ec-green); transition:width .18s; }
+.cl__count { font-size:11px; color:var(--ec-fg-56); font-variant-numeric:tabular-nums; }
+.cl__reset { height:20px; padding:0 6px; border-radius:var(--ec-radius); font-size:11px;
+  color:var(--ec-fg-48); transition:background .12s,color .12s; }
+.cl__reset:hover { background:var(--ec-fg-8); color:var(--ec-fg-100); }
+/* sticky flow controls: Back steps to the previous step, Next marks the
+   active one done and advances — always in reach, no aiming at checkboxes */
+.cl__back { width:28px; height:28px; padding:0; justify-content:center; flex-shrink:0; }
+.cl__next { height:28px; padding:0 14px; flex-shrink:0; }
+.cl__next:disabled { opacity:.4; pointer-events:none; }
+
+.cl__gcnt { margin-left:auto; display:inline-flex; align-items:center; gap:4px;
+  font-size:11px; font-weight:400; color:var(--ec-fg-48); font-variant-numeric:tabular-nums; }
+.cl__gcnt.is-done { color:var(--ec-green); }
+.cl__gcnt svg { width:12px; height:12px; }
+.cl__group .acc__head .chev { margin-left:8px; }
+
+.cl__step { display:flex; align-items:center; gap:10px; min-height:36px; padding:2px 8px;
+  border-radius:var(--ec-radius); cursor:pointer; }
+.cl__step:hover { background:var(--ec-fg-4); }
+.cl__box { display:grid; place-items:center; width:18px; height:18px; flex-shrink:0;
+  border-radius:var(--ec-radius); border:1.5px solid var(--ec-fg-24); color:transparent;
+  transition:background .12s,border-color .12s; }
+.cl__box:hover { border-color:var(--ec-fg-48); }
+.cl__box svg { width:12px; height:12px; }
+.cl__step.is-done .cl__box { background:var(--ec-green); border-color:var(--ec-green); color:#04150e; }
+.cl__label { min-width:0; font-size:12px; color:var(--ec-fg-96);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cl__step.is-done .cl__label { color:var(--ec-fg-48); }
+.cl__tag { flex-shrink:0; padding:1px 6px; border-radius:999px; border:1px solid var(--ec-fg-12);
+  font-size:10px; color:var(--ec-fg-48); }
+.cl__val { margin-left:auto; flex-shrink:0; font-size:11px; color:var(--ec-fg-48);
+  white-space:nowrap; font-variant-numeric:tabular-nums; }
+.cl__chev { width:14px; height:14px; flex-shrink:0; color:var(--ec-fg-32); transition:transform .15s; }
+.cl__step.is-open .cl__chev { transform:rotate(180deg); }
+
+/* expanded step: the context lives inside the row (self-contained on phones);
+   the card runs the full row width */
+.cl__detail { margin:2px 0 8px; padding:10px 12px; border-radius:var(--ec-radius-md);
+  background:var(--ec-fg-4); }
+.cl__coords { display:flex; flex-wrap:wrap; gap:4px; }
+/* tool card: a tidy 3×2 spec grid — geometry on the first row (⌀ / OAL / LOC),
+   machine data on the second (Z / H# / D#); the drawing opens from the icon
+   at the right into the shared .toolzoom overlay */
+.cl__tool { display:flex; align-items:center; gap:16px; }
+.cl__specs { flex:1; display:grid; grid-template-columns:repeat(3, minmax(88px, max-content));
+  gap:8px 24px; align-content:center; }
+.cl__pv { width:28px; height:28px; border:1px solid var(--ec-fg-12); }
+.cl__pv svg { width:15px; height:15px; }
+
+.cl__done { display:flex; align-items:center; gap:8px; margin:0 0 8px; padding:10px 12px;
+  border-radius:var(--ec-radius-md); border:1px solid var(--ec-green);
+  background:var(--ec-green-08); font-size:12px; }
+.cl__done svg { width:16px; height:16px; color:var(--ec-green); flex-shrink:0; }
+.cl__done b { color:var(--ec-fg-100); font-weight:600; }
+.cl__done span { color:var(--ec-fg-56); }
+
 /* ================================================================ PHONE === */
 /* one full-screen panel; its view combobox is the content switcher — the
    hidden panels keep holding state for the swap logic */
@@ -602,6 +680,16 @@ input { font-family:inherit; }
   /* compact header: back + title + avatars + icon-only actions + more */
   .chip-num, .header__sep, .header__date, .header__encybtn, .header__chat { display:none; }
   .btn-secondary { font-size:0; gap:0; padding:0 6px; }
+  /* checklist CTA keeps only the icon + live counter */
+  .header__cl-word { display:none; }
+  /* checklist mode: the reference panel yields — the checklist IS the screen */
+  .clmode__ov { display:none; }
+  /* touch: bigger checklist rows, checkboxes and flow controls */
+  .cl__step { min-height:44px; }
+  .cl__box { width:20px; height:20px; }
+  .cl__label { font-size:13px; white-space:normal; line-height:16px; }
+  .cl__back { width:36px; height:36px; }
+  .cl__next { height:36px; padding:0 18px; }
 }
 
 /* expanded preview overlay */

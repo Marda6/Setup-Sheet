@@ -226,12 +226,7 @@ function renderOverview() {
         ${kvRow('Part dims', valueTag('112 × 28 × 23 mm'))}
       </div>
     </div>
-    <div class="acc">
-      <div class="acc__head">Setups<span class="chev">${icon('i-chevdown')}</span></div>
-      <div class="acc__body">
-        ${SETUPS.map((s) => kvRow(s.name, selectish(s.wp.fixture))).join('')}
-      </div>
-    </div>
+    ${SETUPS.map(setupAccHTML).join('')}
     <div class="acc">
       <div class="acc__head">Holes<span class="chev">${icon('i-chevdown')}</span></div>
       <div class="acc__body">
@@ -494,10 +489,11 @@ function selectTool(tno) {
   }
 }
 
-/* ----------------------------------------------------------- view: Setup */
-/* workpiece setup per setup: material, part zero, stock, fixture + preview */
-function renderSetupView() {
-  return `<div class="overview">${SETUPS.map((s) => `
+/* workpiece setup accordion (one per setup) — lives inside Overview since
+   Setup merged into it (Ruslan: too many small views); on a wide panel the
+   preview docks beside the fields (container query, .acc--wp) */
+function setupAccHTML(s) {
+  return `
     <div class="acc acc--wp">
       <div class="acc__head">${s.name}<span class="chev">${icon('i-chevdown')}</span></div>
       <div class="acc__body acc__body--wp">
@@ -508,7 +504,113 @@ function renderSetupView() {
         </div>
         <div class="preview"><div class="ghost">3D view</div></div>
       </div>
-    </div>`).join('')}</div>`;
+    </div>`;
+}
+
+/* ----------------------------------------------- view: Setup checklist */
+/* generated from SETUPS + TOOLS (fixture → stock → part zero → tools →
+   program), plus per-setup custom steps. Rows are deliberately taller than
+   the app standard — the list is read at the machine, often from a touch
+   screen. Progress persists in localStorage; steps expand in place so the
+   view is self-contained on phones (no reliance on neighboring panels). */
+const CL_KEY = 'ency-cl-2356';
+const clDone = new Set(JSON.parse(localStorage.getItem(CL_KEY) || '[]'));
+let clOpen = null; // id of the expanded step
+const CL_CUSTOM = { setup1: ['Check coolant concentration'] }; // technologist-added
+
+function clSetupTools(s) {
+  const names = [...new Set(s.parts.flatMap((p) => p.ops).map((id) => OPS[id].tool))];
+  return names.map((n) => TOOLS.find((t) => t.name === n)).filter(Boolean);
+}
+function clToolDetail(t) {
+  // a tidy 3×2 spec grid (labels/values from TOOL_STATS, shared with the
+  // Tool table); the drawing opens in the shared .toolzoom overlay instead
+  // of living inside the card — keeps the params section clean
+  const spec = (key) => {
+    const s = TOOL_STATS.find((x) => x.key === key);
+    return `<span class="tspec"><i>${s.label}</i>${s.cell(t)}</span>`;
+  };
+  return `<div class="cl__tool">
+    <div class="cl__specs">${['dia', 'oal', 'loc', 'z', 'hreg', 'dreg'].map(spec).join('')}</div>
+    <button class="header__iconbtn cl__pv" data-toolzoom="${t.tno}" title="Tool preview">${icon('i-expand')}</button>
+  </div>`;
+}
+function clSteps(s) {
+  return [
+    { id: `${s.id}-fixture`, label: 'Install the fixture', val: s.wp.fixture },
+    { id: `${s.id}-stock`,   label: 'Verify the stock',    val: s.wp.stock },
+    { id: `${s.id}-zero`,    label: 'Set the part zero',   val: 'G54',
+      detail: `<div class="cl__coords">
+        <span class="coord"><b>X</b>${s.wp.x}</span>
+        <span class="coord"><b>Y</b>${s.wp.y}</span>
+        <span class="coord"><b>Z</b>${s.wp.z}</span></div>` },
+    ...clSetupTools(s).map((t) => ({
+      id: `${s.id}-${t.tno}`, label: `Load ${t.tno} · ${t.name}`,
+      val: `⌀${num(t.dia)} mm`, detail: clToolDetail(t) })),
+    ...(CL_CUSTOM[s.id] || []).map((label, i) => ({
+      id: `${s.id}-custom${i}`, label, custom: true })),
+    { id: `${s.id}-prog`, label: 'Load the NC program, verify offsets', val: '# 2356' },
+  ];
+}
+const clAll = () => SETUPS.flatMap(clSteps);
+const clSave = () => localStorage.setItem(CL_KEY, JSON.stringify([...clDone]));
+function clCounts() {
+  const all = clAll();
+  return { done: all.filter((st) => clDone.has(st.id)).length, total: all.length };
+}
+function clSyncHeader() {
+  const { done, total } = clCounts();
+  const numEl = $('#clBtnNum');
+  if (numEl) numEl.textContent = done ? `${done}/${total}` : '';
+}
+function clStepHTML(st) {
+  const done = clDone.has(st.id);
+  // every step can be the active one — even without a spec card it expands
+  // into the action strip, so "Next" is always a big target (no aiming)
+  const open = clOpen === st.id;
+  return `
+    <div class="cl__step${done ? ' is-done' : ''}${open ? ' is-open' : ''}" data-step="${st.id}">
+      <button class="cl__box" data-clcheck="${st.id}" title="${done ? 'Uncheck' : 'Done'}">${icon('i-check')}</button>
+      <span class="cl__label">${st.label}</span>
+      ${st.custom ? '<span class="cl__tag">custom</span>' : ''}
+      <span class="cl__val">${st.val || ''}</span>
+      <svg class="cl__chev"><use href="#i-chevdown"/></svg>
+    </div>
+    ${open && st.detail ? `<div class="cl__detail">${st.detail}</div>` : ''}`;
+}
+/* first unchecked step in program order (wraps around); null when all done */
+function clNextAfter(id) {
+  const all = clAll();
+  const i = id ? all.findIndex((st) => st.id === id) : -1;
+  const next = all.slice(i + 1).find((st) => !clDone.has(st.id))
+    || all.find((st) => !clDone.has(st.id));
+  return next?.id ?? null;
+}
+function renderChecklist() {
+  const { done, total } = clCounts();
+  const groups = SETUPS.map((s) => {
+    const steps = clSteps(s);
+    const gDone = steps.filter((st) => clDone.has(st.id)).length;
+    const complete = gDone === steps.length;
+    return `
+    <div class="acc cl__group${complete ? ' is-collapsed' : ''}">
+      <div class="acc__head">${s.name}
+        <span class="cl__gcnt${complete ? ' is-done' : ''}">${complete ? icon('i-check') : ''}${gDone}/${steps.length}</span>
+        <span class="chev">${icon('i-chevdown')}</span></div>
+      <div class="acc__body">${steps.map(clStepHTML).join('')}</div>
+    </div>`;
+  });
+  return `<div class="cl">
+    <div class="cl__progress">
+      <button class="btn-secondary cl__back" data-clback title="Previous step"><svg><use href="#i-back"/></svg></button>
+      <button class="btn-primary cl__next" data-clnext ${done === total ? 'disabled' : ''}>${icon('i-check')}Next</button>
+      <div class="cl__bar"><div class="cl__fill" style="width:${total ? (done / total) * 100 : 0}%"></div></div>
+      <span class="cl__count">${done}/${total}</span>
+      ${done ? '<button class="cl__reset">Reset</button>' : ''}
+    </div>
+    ${done === total ? `<div class="cl__done">${icon('i-check')}<b>Setup complete</b><span>Checked by Ruslan M</span></div>` : ''}
+    ${groups.join('')}
+  </div>`;
 }
 
 /* ------------------------------------------------------ view: 3D Viewer */
@@ -814,14 +916,13 @@ function viewerStep(dir) {
 /* ------------------------------------------------ panel views (combobox) */
 const VIEWS = [
   { id: 'overview',   label: 'Overview',   icon: 'i-grid-view' },
-  { id: 'setup',      label: 'Setup',      icon: 'op-setup' },
   { id: 'operations', label: 'Operations', icon: 'op-operation' },
   { id: 'tools',      label: 'Tool table', icon: 'i-toolbit' },
   { id: 'viewer',     label: '3D Viewer',  icon: 'i-cube' },
 ];
 const viewById = (id) => VIEWS.find((v) => v.id === id);
 
-const VIEW_RENDERERS = { operations: renderOperations, overview: renderOverview, tools: renderTools, setup: renderSetupView, viewer: renderViewer };
+const VIEW_RENDERERS = { operations: renderOperations, overview: renderOverview, tools: renderTools, viewer: renderViewer };
 
 function setPanelView(panel, viewId) {
   const v = viewById(viewId);
@@ -1043,7 +1144,86 @@ const MIN_W = 340;  // shared: left panel and right column can't go narrower
 const MIN_H = 100;  // top/bottom panels can't go shorter
 
 document.addEventListener('DOMContentLoaded', () => {
-  $$('.panel').forEach(initPanelHead);
+  // workspace panels only — the checklist-mode panels have static heads
+  $$('.main .panel').forEach(initPanelHead);
+
+  // checklist is a separate MODE, not a panel view: the workspace is replaced
+  // by a fixed two-panel layout — Overview for reference + the checklist
+  const setClMode = (on) => {
+    document.body.classList.toggle('is-clmode', on);
+    $('#clBtn').classList.toggle('is-active', on);
+    if (on) {
+      clOpen = clNextAfter(null); // resume at the first unchecked step
+      $('#clOverviewBody').innerHTML = renderOverview();
+      $('#clListBody').innerHTML = renderChecklist();
+      $(`#clListBody [data-step="${clOpen}"]`)?.scrollIntoView({ block: 'nearest' });
+    }
+  };
+  $('#clBtn').addEventListener('click', () => setClMode(!document.body.classList.contains('is-clmode')));
+  $('#clClose').addEventListener('click', () => setClMode(false));
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    const zoom = $('.toolzoom'); // the drawing overlay closes first
+    if (zoom) { zoom.remove(); return; }
+    setClMode(false);
+  });
+  // mode interactions: check toggle, reset, step expand + overview accordions
+  $('#clMode').addEventListener('click', (e) => {
+    const clRefresh = () => {
+      $('#clListBody').innerHTML = renderChecklist();
+      clSyncHeader();
+      $(`#clListBody [data-step="${clOpen}"]`)?.scrollIntoView({ block: 'nearest' });
+    };
+    // sticky "Next": mark the active step done, advance to the next unchecked
+    if (e.target.closest('[data-clnext]')) {
+      const id = clOpen && !clDone.has(clOpen) ? clOpen : clNextAfter(null);
+      if (id) {
+        clDone.add(id);
+        clSave();
+        clOpen = clNextAfter(id);
+      }
+      clRefresh();
+      return;
+    }
+    // sticky "Back": step to the previous step (does not uncheck it)
+    if (e.target.closest('[data-clback]')) {
+      const all = clAll();
+      const i = clOpen ? all.findIndex((st) => st.id === clOpen) : all.length;
+      clOpen = all[(i - 1 + all.length) % all.length].id;
+      clRefresh();
+      return;
+    }
+    // the checkbox toggles a step directly; checking also advances the flow
+    const clc = e.target.closest('[data-clcheck]');
+    if (clc) {
+      const id = clc.dataset.clcheck;
+      const checking = !clDone.has(id);
+      checking ? clDone.add(id) : clDone.delete(id);
+      clSave();
+      if (checking) clOpen = clNextAfter(id);
+      clRefresh();
+      return;
+    }
+    if (e.target.closest('.cl__reset')) {
+      clDone.clear();
+      clSave();
+      $('#clListBody').innerHTML = renderChecklist();
+      clSyncHeader();
+      return;
+    }
+    // tool drawing opens in the shared fullscreen overlay
+    const tz = e.target.closest('[data-toolzoom]');
+    if (tz) { openToolZoom(tz.dataset.toolzoom); return; }
+    const cls = e.target.closest('.cl__step');
+    if (cls) {
+      clOpen = clOpen === cls.dataset.step ? null : cls.dataset.step;
+      $('#clListBody').innerHTML = renderChecklist();
+      return;
+    }
+    const acc = e.target.closest('.acc__head');
+    if (acc) acc.parentElement.classList.toggle('is-collapsed');
+  });
+  clSyncHeader();
   document.addEventListener('click', () => {
     $$('.panel__menu').forEach((m) => { m.hidden = true; });
     $('#moreMenu').hidden = true;
@@ -1118,7 +1298,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (String(stacked) !== panel.dataset.opsStacked) body.innerHTML = renderOperations(panel);
     }
   });
-  $$('.panel').forEach((p) => ro.observe(p));
+  $$('.main .panel').forEach((p) => ro.observe(p));
 
   // back to the Clouds projects listing
   $('.header__back').addEventListener('click', () => { location.href = 'clouds.html'; });
