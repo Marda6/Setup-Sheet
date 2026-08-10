@@ -598,7 +598,8 @@ input { font-family:inherit; }
 
 .clmode { display:none; }
 body.is-clmode .main { display:none; }
-body.is-clmode .clmode { flex:1; min-height:0; display:flex; gap:10px; padding:10px; }
+/* no gap: the draggable divider doubles as the 10px spacing, like in .main */
+body.is-clmode .clmode { flex:1; min-height:0; display:flex; padding:10px; }
 .clmode__ov { flex:1.2; min-width:0; }
 .clmode__list { flex:1; min-width:0; }
 .clmode__title { padding-left:8px; font-size:12px; font-weight:500; color:var(--ec-fg-100); }
@@ -630,6 +631,39 @@ body.is-clmode .clmode { flex:1; min-height:0; display:flex; gap:10px; padding:1
 .cl__step { display:flex; align-items:center; gap:10px; min-height:36px; padding:2px 8px;
   border-radius:var(--ec-radius); cursor:pointer; }
 .cl__step:hover { background:var(--ec-fg-4); }
+/* the CURRENT step: the row and its card fuse into one block (shared fill,
+   split radii); the state itself is told by the stepper rail on the left */
+.cl__step.is-open { background:var(--ec-fg-4);
+  border-radius:var(--ec-radius-md) var(--ec-radius-md) 0 0; }
+.cl__step.is-open:not(:has(+ .cl__detail)) { border-radius:var(--ec-radius-md); }
+.cl__step.is-open .cl__label { color:var(--ec-fg-100); font-weight:500; }
+
+/* stepper rail left of the checkboxes: a line through the group with a dot
+   per step — grey ring (todo) / green ring (current) / green fill (done) */
+.cl .acc__body { position:relative; padding-left:32px; }
+.cl__step { position:relative; }
+.cl__step::before, .cl__detail::before { content:''; position:absolute; left:-19px;
+  top:0; bottom:0; width:2px; background:var(--ec-fg-8); }
+.cl__detail::before { bottom:-8px; } /* bridge the card's bottom margin */
+.cl .acc__body > .cl__step:first-child::before { top:50%; }
+.cl .acc__body > .cl__step:last-child::before { bottom:50%; }
+.cl .acc__body > .cl__detail:last-child::before { display:none; }
+.cl__step::after { content:''; position:absolute; left:-23px; top:50%; margin-top:-5px;
+  width:10px; height:10px; border-radius:50%; box-sizing:border-box;
+  background:var(--ec-card-2); border:2px solid var(--ec-fg-24); }
+/* the current ring breathes — a soft green ripple, slow and small */
+.cl__step.is-open::after { border-color:var(--ec-green);
+  animation:cl-pulse 2s ease-out infinite; }
+.cl__step.is-done::after { border-color:var(--ec-green); background:var(--ec-green); animation:none; }
+@keyframes cl-pulse {
+  0%   { box-shadow:0 0 0 0 rgba(0,163,109,.55); }
+  70%  { box-shadow:0 0 0 8px rgba(0,163,109,0); }
+  100% { box-shadow:0 0 0 0 rgba(0,163,109,0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cl__step.is-open::after { animation:none; }
+}
+.cl__detail { position:relative; }
 .cl__box { display:grid; place-items:center; width:18px; height:18px; flex-shrink:0;
   border-radius:var(--ec-radius); border:1.5px solid var(--ec-fg-24); color:transparent;
   transition:background .12s,border-color .12s; }
@@ -647,8 +681,10 @@ body.is-clmode .clmode { flex:1; min-height:0; display:flex; gap:10px; padding:1
 .cl__step.is-open .cl__chev { transform:rotate(180deg); }
 
 /* expanded step: the context lives inside the row (self-contained on phones);
-   the card runs the full row width */
-.cl__detail { margin:2px 0 8px; padding:10px 12px; border-radius:var(--ec-radius-md);
+   the card continues the open row — no gap, top corners square, same fill,
+   so the pair reads as one block */
+.cl__detail { margin:0 0 8px; padding:10px 12px;
+  border-radius:0 0 var(--ec-radius-md) var(--ec-radius-md);
   background:var(--ec-fg-4); }
 .cl__coords { display:flex; flex-wrap:wrap; gap:4px; }
 /* tool card: a tidy 3×2 spec grid — geometry on the first row (⌀ / OAL / LOC),
