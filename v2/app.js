@@ -131,7 +131,13 @@ function renderOperations(panel) {
     </div>`; }).join('')}</div>`;
 }
 
-function opsPanel() { return $$('.panel').find((p) => p.dataset.view === 'operations'); }
+/* a view can exist in two contexts (workspace + checklist mode) — target the
+   visible instance first (offsetParent is null inside display:none) */
+function viewPanel(viewId) {
+  const all = $$('.panel').filter((p) => p.dataset.view === viewId);
+  return all.find((p) => p.offsetParent !== null) || all[0];
+}
+function opsPanel() { return viewPanel('operations'); }
 function refreshOps() {
   const panel = opsPanel();
   if (panel) $('.panel__body', panel).innerHTML = renderOperations(panel);
@@ -475,7 +481,7 @@ function renderTools(panel) {
 }
 
 function refreshTools() {
-  const panel = $$('.panel').find((p) => p.dataset.view === 'tools');
+  const panel = viewPanel('tools');
   if (panel) $('.panel__body', panel).innerHTML = renderTools(panel);
 }
 
@@ -719,7 +725,9 @@ const VIEWER_SCENE = [
 ];
 
 function drawViewer() {
-  const c = $('.viewer__canvas'); if (!c) return;
+  // two contexts can host the viewer — draw on the visible canvas
+  const c = $$('.viewer__canvas').find((x) => x.offsetParent !== null) || $('.viewer__canvas');
+  if (!c) return;
   const r = c.getBoundingClientRect(); if (!r.width || !r.height) return;
   const dpr = window.devicePixelRatio || 1;
   const W = Math.round(r.width), H = Math.round(r.height);
@@ -868,7 +876,8 @@ function renderViewer() {
 }
 
 function viewerSync() {
-  const v = $('.viewer'); if (!v) return;
+  const v = $$('.viewer').find((x) => x.offsetParent !== null) || $('.viewer');
+  if (!v) return;
   const pct = VIEWER_TOTAL ? (viewer.t / VIEWER_TOTAL) * 100 : 0;
   $('.viewer__fill', v).style.width = `${pct}%`;
   $('.viewer__thumb', v).style.left = `${pct}%`;
@@ -1102,8 +1111,11 @@ function initPanelHead(panel) {
   $$('.panel__menu button', panel).forEach((b) => b.addEventListener('click', () => {
     const target = b.dataset.view, current = panel.dataset.view;
     if (target !== current) {
-      // the view is already shown in another panel — swap the two panels
-      const other = $$('.panel').find((p) => p !== panel && p.dataset.view === target);
+      // the view is already shown in another panel — swap the two panels;
+      // swaps stay INSIDE the workspace: the checklist-mode panel switches
+      // freely (duplicate views across contexts are fine — one is hidden)
+      const other = panel.closest('.main')
+        ? $$('.main .panel').find((p) => p !== panel && p.dataset.view === target) : null;
       if (other) setPanelView(other, current);
       setPanelView(panel, target);
     }
@@ -1144,8 +1156,9 @@ const MIN_W = 340;  // shared: left panel and right column can't go narrower
 const MIN_H = 100;  // top/bottom panels can't go shorter
 
 document.addEventListener('DOMContentLoaded', () => {
-  // workspace panels only — the checklist-mode panels have static heads
-  $$('.main .panel').forEach(initPanelHead);
+  // workspace panels + the checklist-mode reference panel (it is a real
+  // panel with the view combobox); the checklist panel itself stays static
+  $$('.main .panel, .clmode__ov').forEach(initPanelHead);
 
   // checklist is a separate MODE, not a panel view: the workspace is replaced
   // by a fixed two-panel layout — Overview for reference + the checklist
@@ -1153,8 +1166,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.classList.toggle('is-clmode', on);
     $('#clBtn').classList.toggle('is-active', on);
     if (on) {
-      clOpen = clNextAfter(null); // resume at the first unchecked step
-      $('#clOverviewBody').innerHTML = renderOverview();
+      // the reference panel keeps whatever view the user left it in;
+      // the checklist resumes at the first unchecked step
+      clOpen = clNextAfter(null);
       $('#clListBody').innerHTML = renderChecklist();
       $(`#clListBody [data-step="${clOpen}"]`)?.scrollIntoView({ block: 'nearest' });
     }
@@ -1177,8 +1191,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (zoom) { zoom.remove(); return; }
     setClMode(false);
   });
-  // mode interactions: check toggle, reset, step expand + overview accordions
-  $('#clMode').addEventListener('click', (e) => {
+  // checklist interactions live on the RIGHT panel only — the left reference
+  // panel is a real panel and handles its own clicks via initPanelHead
+  $('.clmode__list').addEventListener('click', (e) => {
     const clRefresh = () => {
       $('#clListBody').innerHTML = renderChecklist();
       clSyncHeader();
@@ -1308,7 +1323,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (String(stacked) !== panel.dataset.opsStacked) body.innerHTML = renderOperations(panel);
     }
   });
-  $$('.main .panel').forEach((p) => ro.observe(p));
+  $$('.main .panel, .clmode__ov').forEach((p) => ro.observe(p));
 
   // back to the Clouds projects listing
   $('.header__back').addEventListener('click', () => { location.href = 'clouds.html'; });
