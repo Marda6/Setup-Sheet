@@ -616,25 +616,46 @@ body.is-clmode .clmode { flex:1; min-height:0; display:flex; padding:10px; }
    often on touch — rows are taller than the 24px app standard */
 
 .cl { padding:0 8px 12px; }
-.cl__progress { position:sticky; top:0; z-index:2; display:flex; align-items:center;
-  gap:10px; padding:10px 4px; background:var(--ec-card-2); }
-.cl__bar { flex:1; height:4px; border-radius:999px; background:var(--ec-fg-8); overflow:hidden; }
-.cl__fill { height:100%; border-radius:999px; background:var(--ec-green); transition:width .18s; }
+/* sticky header: flow controls + progress + section tabs stay in reach */
+.cl__head { position:sticky; top:0; z-index:2; padding-bottom:8px;
+  background:var(--ec-card-2); }
+.cl__progress { display:flex; align-items:center; gap:10px; padding:10px 4px; }
+/* sections overview: one card per section (scales to 10+ setups) — name,
+   done count and a hairline progress fill along the bottom edge */
+.cl__cards { display:flex; flex-direction:column; gap:6px; }
+.cl__card { position:relative; display:flex; align-items:center; gap:8px; width:100%;
+  min-height:44px; padding:0 10px 0 12px; border-radius:var(--ec-radius-md);
+  background:var(--ec-fg-4); overflow:hidden; cursor:pointer;
+  transition:background .12s; }
+.cl__card:hover { background:var(--ec-fg-8); }
+.cl__card-name { flex:1; min-width:0; text-align:left; font-size:12px; font-weight:500;
+  color:var(--ec-fg-96); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cl__card-cnt { display:inline-flex; align-items:center; gap:4px; flex-shrink:0;
+  font-size:11px; color:var(--ec-fg-48); font-variant-numeric:tabular-nums; }
+.cl__card-cnt.is-done { color:var(--ec-green); }
+.cl__card-cnt svg { width:12px; height:12px; }
+.cl__card-chev { width:14px; height:14px; flex-shrink:0; color:var(--ec-fg-32); }
+.cl__card-bar { position:absolute; left:0; bottom:0; height:2px;
+  background:var(--ec-green); transition:width .18s; }
+
+/* breadcrumb inside a section: back to the overview + name + count */
+.cl__crumb { display:flex; align-items:center; gap:8px; padding:0 0 8px 4px; }
+.cl__crumb-name { font-size:12px; font-weight:500; color:var(--ec-fg-100); }
+.cl__crumb-cnt { font-size:11px; color:var(--ec-fg-48); font-variant-numeric:tabular-nums; }
+/* the bar is split into one segment per section (Tools + each setup) —
+   every segment fills with its own section's progress */
+.cl__bar { flex:1; display:flex; gap:3px; }
+.cl__seg { flex:1; height:4px; border-radius:999px; background:var(--ec-fg-8); overflow:hidden; }
+.cl__seg i { display:block; height:100%; border-radius:999px; background:var(--ec-green);
+  transition:width .18s; }
 .cl__count { font-size:11px; color:var(--ec-fg-56); font-variant-numeric:tabular-nums; }
 .cl__reset { height:20px; padding:0 6px; border-radius:var(--ec-radius); font-size:11px;
   color:var(--ec-fg-48); transition:background .12s,color .12s; }
 .cl__reset:hover { background:var(--ec-fg-8); color:var(--ec-fg-100); }
-/* sticky flow controls: Back steps to the previous step, Next marks the
-   active one done and advances — always in reach, no aiming at checkboxes */
-.cl__back { width:28px; height:28px; padding:0; justify-content:center; flex-shrink:0; }
+/* sticky flow control: Next marks the active step done and advances —
+   always in reach, no aiming at checkboxes; sits right of the progress bar */
 .cl__next { height:28px; padding:0 14px; flex-shrink:0; }
 .cl__next:disabled { opacity:.4; pointer-events:none; }
-
-.cl__gcnt { margin-left:auto; display:inline-flex; align-items:center; gap:4px;
-  font-size:11px; font-weight:400; color:var(--ec-fg-48); font-variant-numeric:tabular-nums; }
-.cl__gcnt.is-done { color:var(--ec-green); }
-.cl__gcnt svg { width:12px; height:12px; }
-.cl__group .acc__head .chev { margin-left:8px; }
 
 .cl__step { display:flex; align-items:center; gap:10px; min-height:36px; padding:2px 8px;
   border-radius:var(--ec-radius); cursor:pointer; }
@@ -646,16 +667,16 @@ body.is-clmode .clmode { flex:1; min-height:0; display:flex; padding:10px; }
 .cl__step.is-open:not(:has(+ .cl__detail)) { border-radius:var(--ec-radius-md); }
 .cl__step.is-open .cl__label { color:var(--ec-fg-100); font-weight:500; }
 
-/* stepper rail left of the checkboxes: a line through the group with a dot
+/* stepper rail left of the checkboxes: a line through the section with a dot
    per step — grey ring (todo) / green ring (current) / green fill (done) */
-.cl .acc__body { position:relative; padding-left:32px; }
+.cl__steps { position:relative; padding-left:24px; }
 .cl__step { position:relative; }
 .cl__step::before, .cl__detail::before { content:''; position:absolute; left:-19px;
   top:0; bottom:0; width:2px; background:var(--ec-fg-8); }
 .cl__detail::before { bottom:-8px; } /* bridge the card's bottom margin */
-.cl .acc__body > .cl__step:first-child::before { top:50%; }
-.cl .acc__body > .cl__step:last-child::before { bottom:50%; }
-.cl .acc__body > .cl__detail:last-child::before { display:none; }
+.cl__steps > .cl__step:first-child::before { top:50%; }
+.cl__steps > .cl__step:last-child::before { bottom:50%; }
+.cl__steps > .cl__detail:last-child::before { display:none; }
 .cl__step::after { content:''; position:absolute; left:-23px; top:50%; margin-top:-5px;
   width:10px; height:10px; border-radius:50%; box-sizing:border-box;
   background:var(--ec-card-2); border:2px solid var(--ec-fg-24); }
@@ -732,7 +753,6 @@ body.is-clmode .clmode { flex:1; min-height:0; display:flex; padding:10px; }
   .cl__step { min-height:44px; }
   .cl__box { width:20px; height:20px; }
   .cl__label { font-size:13px; white-space:normal; line-height:16px; }
-  .cl__back { width:36px; height:36px; }
   .cl__next { height:36px; padding:0 18px; }
 }
 
