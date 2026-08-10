@@ -1161,6 +1161,16 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   $('#clBtn').addEventListener('click', () => setClMode(!document.body.classList.contains('is-clmode')));
   $('#clClose').addEventListener('click', () => setClMode(false));
+  // the divider between the reference and the checklist is draggable too
+  const clOv = $('.clmode__ov');
+  makeDraggable($('#clDividerV'), {
+    start: (e) => ({ x: e.clientX, w: clOv.getBoundingClientRect().width }),
+    move: (e, s) => {
+      const content = $('#clMode').clientWidth - 20;     // minus .clmode padding
+      const max = content - 10 - MIN_W;                  // divider + list minimum
+      clOv.style.flex = `0 0 ${Math.max(MIN_W, Math.min(max, s.w + (e.clientX - s.x)))}px`;
+    },
+  });
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
     const zoom = $('.toolzoom'); // the drawing overlay closes first

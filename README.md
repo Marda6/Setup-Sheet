@@ -1,49 +1,44 @@
-# Setup Sheet — ENCY Core prototype
+# ENCY workspace prototype (v2)
 
-Clickable static prototype of the ENCY project workspace page (project **#2356**,
-"Sequential machining"), built for design hand-off to developers. It reproduces
-two views with the top toggle:
+Clickable static prototype of the ENCY web app, built for design hand-off to
+developers. Two pages:
 
-- **3D view** — operations tree (Machine → Setup → Part → operations) over a static
-  render of the 3D scene, with the viewport toolbar and stage controls.
-- **Setup sheet** — the redesign: checklist bar + three columns
-  (**Operations**, **Workpiece setup**, **Tools & assemblies**), tool cards with
-  2D / 3D / Holder tabs and a dimensioned tool drawing.
+- **`v2/index.html`** — project workspace (project **#2356**, "Sequential
+  machining"): panel system with switchable views (Overview, Operations,
+  Tool table, 3D Viewer), a real software-rendered 3D viewer with simulation
+  timeline, tool cards with generated 2D/3D drawings, and the **setup
+  checklist** mode (Overview reference + step-by-step checklist).
+- **`v2/clouds.html`** — the Clouds page: projects grid/list, collections,
+  in-collection view, inbox, chats (with composer and a 3D pane), mobile-app
+  QR, account settings.
 
-Pure **HTML / CSS / JS** — no build step, no backend. All UI is styled with the
-**ENCY Core** design tokens (foreground = opacities of `#f5f5f5` over `#0e1010`,
-accent `#00a36d`, Inter, 2px grid). Icons are ported 1:1 from the ENCY
-`PwIcons` / operation-icon set.
+Pure **HTML / CSS / JS** — no build step, no backend. Everything is styled
+with the **ENCY Core** design tokens (foreground = opacities of `#f5f5f5`
+over `#0e1010`, accent `#00a36d`, Inter, radii 4/8/12) and has a light theme
+(token flip, `data-theme`). The root `index.html` just redirects to `v2/`.
+
+Design documentation and decisions live in [HANDOFF.md](HANDOFF.md).
 
 ## Run locally
 
-Any static server, e.g.:
-
 ```bash
-npx serve .
-# or
-python -m http.server 4321
+node server.mjs
 ```
 
-Then open the printed URL.
+Then open `http://localhost:4321/v2/` (the port respects `PORT`).
 
 ## Files
 
-| File | Role |
+| Path | Role |
 |---|---|
-| `index.html` | Page markup + inline SVG icon sprite |
-| `styles.css` | ENCY Core tokens + component styles |
-| `app.js` | Static data (tree / operations / tools) + clickable interactions |
-| `assets/view-3d.png` | Static 3D-scene render (3D view) |
-| `assets/workpiece-preview.png` | Workpiece 3D preview (Setup sheet) |
+| `v2/index.html · app.js · styles.css` | Project workspace page |
+| `v2/clouds.html · clouds.css · clouds.js` | Clouds page |
 | `assets/fonts/` | Self-hosted Inter (woff2) |
-
-## Notes
-
-- The 3D area is intentionally a static image — 3D view is not part of this redesign.
-- Content (operations, tools, cutting values) is frozen from project #2356.
+| `server.mjs` | Zero-dep static server for local preview |
+| `HANDOFF.md` | Living hand-off doc (ru) |
 
 ## Deploy — GitHub Pages
 
-Push to a GitHub repo, then **Settings → Pages → Deploy from a branch → `main` / root**.
-No build required.
+Published from the `gh-pages` branch as a squashed snapshot (only `v2/` +
+fonts + the root redirect). Live: <https://marda6.github.io/Setup-Sheet/v2/>.
+The publication process is described in HANDOFF.md.
