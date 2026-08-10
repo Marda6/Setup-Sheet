@@ -522,12 +522,8 @@ function setupAccHTML(s) {
 const CL_KEY = 'ency-cl-2356';
 const clDone = new Set(JSON.parse(localStorage.getItem(CL_KEY) || '[]'));
 let clOpen = null; // id of the expanded step
+let clSec = null;  // open section; null = the sections overview (cards)
 const CL_CUSTOM = { setup1: ['Check coolant concentration'] }; // technologist-added
-
-function clSetupTools(s) {
-  const names = [...new Set(s.parts.flatMap((p) => p.ops).map((id) => OPS[id].tool))];
-  return names.map((n) => TOOLS.find((t) => t.name === n)).filter(Boolean);
-}
 function clToolDetail(t) {
   // a tidy 3×2 spec grid (labels/values from TOOL_STATS, shared with the
   // Tool table); the drawing opens in the shared .toolzoom overlay instead
@@ -541,7 +537,16 @@ function clToolDetail(t) {
     <button class="header__iconbtn cl__pv" data-toolzoom="${t.tno}" title="Tool preview">${icon('i-expand')}</button>
   </div>`;
 }
-function clSteps(s) {
+/* tool prep is its OWN flow: unique tools across the whole program, in
+   program order — loaded into the magazine once, not per setup */
+function clToolSteps() {
+  const names = [...new Set(SETUPS.flatMap((s) => s.parts.flatMap((p) => p.ops))
+    .map((id) => OPS[id].tool))];
+  return names.map((n) => TOOLS.find((t) => t.name === n)).filter(Boolean)
+    .map((t) => ({ id: `tool-${t.tno}`, label: `Load ${t.tno} · ${t.name}`,
+      val: `⌀${num(t.dia)} mm`, detail: clToolDetail(t) }));
+}
+function clSetupSteps(s) {
   return [
     { id: `${s.id}-fixture`, label: 'Install the fixture', val: s.wp.fixture },
     { id: `${s.id}-stock`,   label: 'Verify the stock',    val: s.wp.stock },
@@ -550,15 +555,22 @@ function clSteps(s) {
         <span class="coord"><b>X</b>${s.wp.x}</span>
         <span class="coord"><b>Y</b>${s.wp.y}</span>
         <span class="coord"><b>Z</b>${s.wp.z}</span></div>` },
-    ...clSetupTools(s).map((t) => ({
-      id: `${s.id}-${t.tno}`, label: `Load ${t.tno} · ${t.name}`,
-      val: `⌀${num(t.dia)} mm`, detail: clToolDetail(t) })),
     ...(CL_CUSTOM[s.id] || []).map((label, i) => ({
       id: `${s.id}-custom${i}`, label, custom: true })),
     { id: `${s.id}-prog`, label: 'Load the NC program, verify offsets', val: '# 2356' },
   ];
 }
-const clAll = () => SETUPS.flatMap(clSteps);
+/* sections are cards on the overview screen (scales to 10+ setups): the
+   user picks where to start; the flat order (tools → setups) still defines
+   the guided Next flow across sections */
+function clSections() {
+  return [
+    { id: 'tools', name: 'Tools', steps: clToolSteps() },
+    ...SETUPS.map((s) => ({ id: s.id, name: s.name, steps: clSetupSteps(s) })),
+  ];
+}
+const clAll = () => clSections().flatMap((sec) => sec.steps);
+const clSecOf = (id) => clSections().find((sec) => sec.steps.some((st) => st.id === id))?.id;
 const clSave = () => localStorage.setItem(CL_KEY, JSON.stringify([...clDone]));
 function clCounts() {
   const all = clAll();
@@ -593,29 +605,44 @@ function clNextAfter(id) {
   return next?.id ?? null;
 }
 function renderChecklist() {
+  const sections = clSections();
   const { done, total } = clCounts();
-  const groups = SETUPS.map((s) => {
-    const steps = clSteps(s);
-    const gDone = steps.filter((st) => clDone.has(st.id)).length;
-    const complete = gDone === steps.length;
-    return `
-    <div class="acc cl__group${complete ? ' is-collapsed' : ''}">
-      <div class="acc__head">${s.name}
-        <span class="cl__gcnt${complete ? ' is-done' : ''}">${complete ? icon('i-check') : ''}${gDone}/${steps.length}</span>
-        <span class="chev">${icon('i-chevdown')}</span></div>
-      <div class="acc__body">${steps.map(clStepHTML).join('')}</div>
+  const sec = clSec ? sections.find((x) => x.id === clSec) : null;
+  // inside a section: breadcrumb back to the overview; outside: section cards
+  const crumb = sec ? (() => {
+    const d = sec.steps.filter((st) => clDone.has(st.id)).length;
+    return `<div class="cl__crumb">
+      <button class="header__iconbtn" data-clsecs title="All sections"><svg><use href="#i-back"/></svg></button>
+      <span class="cl__crumb-name">${sec.name}</span>
+      <span class="cl__crumb-cnt">${d}/${sec.steps.length}</span>
     </div>`;
-  });
+  })() : '';
+  const content = sec
+    ? `<div class="cl__steps">${sec.steps.map(clStepHTML).join('')}</div>`
+    : `<div class="cl__cards">${sections.map((x) => {
+        const d = x.steps.filter((st) => clDone.has(st.id)).length, t = x.steps.length;
+        return `<button class="cl__card" data-clsec="${x.id}">
+          <span class="cl__card-name">${x.name}</span>
+          <span class="cl__card-cnt${d === t ? ' is-done' : ''}">${d === t ? icon('i-check') : ''}${d}/${t} steps</span>
+          <svg class="cl__card-chev"><use href="#i-chev"/></svg>
+          <i class="cl__card-bar" style="width:${t ? (d / t) * 100 : 0}%"></i>
+        </button>`;
+      }).join('')}</div>`;
   return `<div class="cl">
-    <div class="cl__progress">
-      <button class="btn-secondary cl__back" data-clback title="Previous step"><svg><use href="#i-back"/></svg></button>
-      <button class="btn-primary cl__next" data-clnext ${done === total ? 'disabled' : ''}>${icon('i-check')}Next</button>
-      <div class="cl__bar"><div class="cl__fill" style="width:${total ? (done / total) * 100 : 0}%"></div></div>
-      <span class="cl__count">${done}/${total}</span>
-      ${done ? '<button class="cl__reset">Reset</button>' : ''}
+    <div class="cl__head">
+      <div class="cl__progress">
+        <div class="cl__bar">${sections.map((x) => {
+          const d = x.steps.filter((st) => clDone.has(st.id)).length, t = x.steps.length;
+          return `<div class="cl__seg" title="${x.name}"><i style="width:${t ? (d / t) * 100 : 0}%"></i></div>`;
+        }).join('')}</div>
+        <span class="cl__count">${done}/${total}</span>
+        ${done ? '<button class="cl__reset">Reset</button>' : ''}
+        <button class="btn-primary cl__next" data-clnext ${done === total ? 'disabled' : ''}>${icon('i-check')}Next</button>
+      </div>
+      ${crumb}
     </div>
-    ${done === total ? `<div class="cl__done">${icon('i-check')}<b>Setup complete</b><span>Checked by Ruslan M</span></div>` : ''}
-    ${groups.join('')}
+    ${done === total && !sec ? `<div class="cl__done">${icon('i-check')}<b>Setup complete</b><span>Checked by Ruslan M</span></div>` : ''}
+    ${content}
   </div>`;
 }
 
@@ -1166,11 +1193,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.classList.toggle('is-clmode', on);
     $('#clBtn').classList.toggle('is-active', on);
     if (on) {
-      // the reference panel keeps whatever view the user left it in;
-      // the checklist resumes at the first unchecked step
+      // the reference panel keeps whatever view the user left it in; the
+      // checklist opens on the sections overview so the user picks the flow
       clOpen = clNextAfter(null);
+      clSec = null;
       $('#clListBody').innerHTML = renderChecklist();
-      $(`#clListBody [data-step="${clOpen}"]`)?.scrollIntoView({ block: 'nearest' });
     }
   };
   $('#clBtn').addEventListener('click', () => setClMode(!document.body.classList.contains('is-clmode')));
@@ -1195,10 +1222,26 @@ document.addEventListener('DOMContentLoaded', () => {
   // panel is a real panel and handles its own clicks via initPanelHead
   $('.clmode__list').addEventListener('click', (e) => {
     const clRefresh = () => {
+      if (clOpen) clSec = clSecOf(clOpen) || clSec; // follow the flow across sections
       $('#clListBody').innerHTML = renderChecklist();
       clSyncHeader();
       $(`#clListBody [data-step="${clOpen}"]`)?.scrollIntoView({ block: 'nearest' });
     };
+    // a section card opens its steps, starting at the first unchecked one
+    const card = e.target.closest('[data-clsec]');
+    if (card) {
+      clSec = card.dataset.clsec;
+      const sec = clSections().find((x) => x.id === clSec);
+      clOpen = sec?.steps.find((st) => !clDone.has(st.id))?.id ?? null;
+      $('#clListBody').innerHTML = renderChecklist();
+      return;
+    }
+    // breadcrumb: back to the sections overview
+    if (e.target.closest('[data-clsecs]')) {
+      clSec = null;
+      $('#clListBody').innerHTML = renderChecklist();
+      return;
+    }
     // sticky "Next": mark the active step done, advance to the next unchecked
     if (e.target.closest('[data-clnext]')) {
       const id = clOpen && !clDone.has(clOpen) ? clOpen : clNextAfter(null);
@@ -1207,14 +1250,6 @@ document.addEventListener('DOMContentLoaded', () => {
         clSave();
         clOpen = clNextAfter(id);
       }
-      clRefresh();
-      return;
-    }
-    // sticky "Back": step to the previous step (does not uncheck it)
-    if (e.target.closest('[data-clback]')) {
-      const all = clAll();
-      const i = clOpen ? all.findIndex((st) => st.id === clOpen) : all.length;
-      clOpen = all[(i - 1 + all.length) % all.length].id;
       clRefresh();
       return;
     }
@@ -1245,8 +1280,6 @@ document.addEventListener('DOMContentLoaded', () => {
       $('#clListBody').innerHTML = renderChecklist();
       return;
     }
-    const acc = e.target.closest('.acc__head');
-    if (acc) acc.parentElement.classList.toggle('is-collapsed');
   });
   clSyncHeader();
   document.addEventListener('click', () => {
