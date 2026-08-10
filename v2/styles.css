@@ -594,7 +594,13 @@ input { font-family:inherit; }
    two-panel layout — Overview (reference) on the left, the checklist right */
 .header__cl-num { font-variant-numeric:tabular-nums; opacity:.75; }
 .header__cl-num:empty { display:none; }
-.header__cl.is-active { filter:brightness(1.15); }
+/* the CTA is a mode toggle: solid green = "start checklist", pressed state
+   (green tint + green ring, the selected pattern) = "you are in the mode" */
+.header__cl.is-active { background:var(--ec-green-08);
+  box-shadow:inset 0 0 0 1px var(--ec-green); color:var(--ec-fg-100); }
+.header__cl.is-active:hover { background:var(--ec-green-16); }
+.header__cl.is-active svg { color:var(--ec-green); }
+.header__cl.is-active .header__cl-num { opacity:1; color:var(--ec-green); }
 
 .clmode { display:none; }
 body.is-clmode .main { display:none; }
@@ -602,6 +608,8 @@ body.is-clmode .main { display:none; }
 body.is-clmode .clmode { flex:1; min-height:0; display:flex; padding:10px; }
 .clmode__ov { flex:1.2; min-width:0; }
 .clmode__list { flex:1; min-width:0; }
+/* the reference panel can't collapse (there is no second panel to yield to) */
+.clmode__ov .panel__collapse, .clmode__ov .panel__collapse + .panel__sep { display:none; }
 .clmode__title { padding-left:8px; font-size:12px; font-weight:500; color:var(--ec-fg-100); }
 
 /* deliberate density exception below: the checklist is read at the machine,

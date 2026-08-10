@@ -247,11 +247,13 @@
       </section>
     </div>
   </div>
-  <!-- checklist mode: a fixed two-panel layout replacing the workspace -->
+  <!-- checklist mode: a fixed two-panel layout replacing the workspace;
+       the left panel is a REAL panel with the view combobox (Overview by
+       default, switchable to 3D Viewer / Tool table / Operations) -->
   <div class="clmode" id="clMode">
-    <section class="panel clmode__ov">
-      <header class="panel__head"><div class="clmode__title">Overview</div></header>
-      <div class="panel__body" id="clOverviewBody"></div>
+    <section class="panel clmode__ov" data-view="overview">
+      <header class="panel__head"></header>
+      <div class="panel__body"><div class="ghost"></div></div>
     </section>
     <div class="divider divider--v" id="clDividerV" title="Drag to resize"></div>
     <section class="panel clmode__list">
