@@ -780,12 +780,29 @@ function drawViewer() {
     ctx.setLineDash(dash || []); ctx.stroke(); ctx.setLineDash([]);
   };
 
-  // floor grid under the fixture
-  ctx.strokeStyle = 'rgba(245,245,245,.05)'; ctx.lineWidth = 1;
-  for (let g = -100; g <= 100; g += 25) {
-    line([g, -100, -6], [g, 100, -6], 'rgba(245,245,245,.05)');
-    line([-100, g, -6], [100, g, -6], 'rgba(245,245,245,.05)');
+  // floor: radial glow under the scene + fine grid (minor 10 / major 50),
+  // both fading out from the center — the glow is screen-space, anchored to
+  // the projected floor center so it follows orbit/zoom
+  const C0 = proj([0, 0, -6]);
+  const glow = ctx.createRadialGradient(C0.x, C0.y, 0, C0.x, C0.y, S * 210);
+  glow.addColorStop(0, 'rgba(245,245,245,.07)');
+  glow.addColorStop(.55, 'rgba(245,245,245,.025)');
+  glow.addColorStop(1, 'rgba(245,245,245,0)');
+  ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
+  ctx.lineWidth = 1;
+  for (let g = -200; g <= 200; g += 10) {
+    const col = `rgba(245,245,245,${g % 50 === 0 ? .06 : .03})`;
+    line([g, -200, -6], [g, 200, -6], col);
+    line([-200, g, -6], [200, g, -6], col);
   }
+  // fade the floor (glow + grid are all that's on the canvas so far) to the edges
+  const fade = ctx.createRadialGradient(C0.x, C0.y, 0, C0.x, C0.y, S * 230);
+  fade.addColorStop(0, 'rgba(0,0,0,1)');
+  fade.addColorStop(.6, 'rgba(0,0,0,.75)');
+  fade.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.globalCompositeOperation = 'destination-in';
+  ctx.fillStyle = fade; ctx.fillRect(0, 0, W, H);
+  ctx.globalCompositeOperation = 'source-over';
 
   // meshes → visible faces, far-to-near
   const faces = [];
